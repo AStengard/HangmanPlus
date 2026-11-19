@@ -1,0 +1,1214 @@
+/**
+ * =============================================================================
+ * HANGMAN + | TACTICAL WORD BANK & TIERED SIGNAL CLUES
+ * =============================================================================
+ * 130 Curated Lexicon Words Across 10 Thematic Sectors (390 Progressive Clues).
+ * Each word entry contains:
+ *  - word: Uppercase target string (A-Z)
+ *  - category: Thematic domain displayed in the Clues HUD
+ *  - clues: Array of 3 progressive clues:
+ *      * clues[0] (Tier 1): Broad introductory clue (available immediately)
+ *      * clues[1] (Tier 2): Intermediate hint (auto-decrypted at <= 3 tethers)
+ *      * clues[2] (Tier 3): Critical emergency clue (unlocked at 1 tether)
+ * =============================================================================
+ */
+
+const WORD_BANK = [
+  // 1. Space & Cosmos (13)
+  {
+    word: "NEBULA",
+    category: "Space & Cosmos",
+    clues: [
+      "A colossal interstellar cloud in deep space",
+      "Often acts as a stellar nursery where new stars form",
+      "Famous examples include Orion and the Pillars of Creation"
+    ]
+  },
+  {
+    word: "QUASAR",
+    category: "Space & Cosmos",
+    clues: [
+      "An extraordinarily luminous cosmic object",
+      "Powered by a supermassive black hole accreting matter",
+      "Short for quasi-stellar radio source"
+    ]
+  },
+  {
+    word: "ECLIPSE",
+    category: "Space & Cosmos",
+    clues: [
+      "A dramatic celestial alignment",
+      "Occurs when one astronomical body casts a shadow on another",
+      "Can be solar or lunar, partial or total"
+    ]
+  },
+  {
+    word: "ASTEROID",
+    category: "Space & Cosmos",
+    clues: [
+      "A rocky remnant from the early solar system",
+      "Most orbit in a vast belt between Mars and Jupiter",
+      "A giant one ended the age of non-avian dinosaurs"
+    ]
+  },
+  {
+    word: "PULSAR",
+    category: "Space & Cosmos",
+    clues: [
+      "A rapidly spinning stellar remnant",
+      "Emits rhythmic beams of radiation like a cosmic lighthouse",
+      "A highly magnetized, rotating neutron star"
+    ]
+  },
+  {
+    word: "GRAVITY",
+    category: "Space & Cosmos",
+    clues: [
+      "A fundamental force of the universe",
+      "Keeps planets in orbit and anchors us to the ground",
+      "Described by Newton and Einstein in general relativity"
+    ]
+  },
+  {
+    word: "SOLSTICE",
+    category: "Space & Cosmos",
+    clues: [
+      "An astronomical seasonal milestone",
+      "Occurs twice a year when planetary axial tilt reaches an extreme",
+      "Marks the longest day in summer or shortest day in winter"
+    ]
+  },
+  {
+    word: "TELESCOPE",
+    category: "Space & Cosmos",
+    clues: [
+      "An essential optical instrument for astronomy",
+      "Uses lenses, mirrors, or dishes to capture distant light",
+      "Hubble and James Webb are famous orbital examples"
+    ]
+  },
+  {
+    word: "APHELION",
+    category: "Space & Cosmos",
+    clues: [
+      "A specific point along an elliptical orbit",
+      "The exact opposite of perihelion in planetary motion",
+      "The orbital point where a planet is farthest from the Sun"
+    ]
+  },
+  {
+    word: "EXOPLANET",
+    category: "Space & Cosmos",
+    clues: [
+      "A distant world beyond our stellar neighborhood",
+      "Thousands were discovered by the Kepler and TESS missions",
+      "Any planet orbiting a star outside our solar system"
+    ]
+  },
+  {
+    word: "SUPERNOVA",
+    category: "Space & Cosmos",
+    clues: [
+      "One of the most energetic events in the cosmos",
+      "Can briefly outshine an entire galaxy and forge heavy elements",
+      "The catastrophic explosive death of a massive star"
+    ]
+  },
+  {
+    word: "COSMONAUT",
+    category: "Space & Cosmos",
+    clues: [
+      "A pioneer of orbital spaceflight",
+      "Yuri Gagarin became the first one in 1961",
+      "Russian term for a spacefarer or astronaut"
+    ]
+  },
+  {
+    word: "METEORITE",
+    category: "Space & Cosmos",
+    clues: [
+      "An extraterrestrial visitor you can hold in your hand",
+      "Begins as a space rock blazing through the atmosphere",
+      "A meteoroid that survives entry to strike the surface"
+    ]
+  },
+
+  // 2. Tech & Cyber (13)
+  {
+    word: "ALGORITHM",
+    category: "Tech & Cyber",
+    clues: [
+      "A foundational concept in computer science",
+      "Powers search engines, recommendation feeds, and GPS routing",
+      "A step-by-step set of rules for solving a computational problem"
+    ]
+  },
+  {
+    word: "FIREWALL",
+    category: "Tech & Cyber",
+    clues: [
+      "A cornerstone of network cybersecurity",
+      "Inspects incoming and outgoing data packets against strict rules",
+      "A digital security barrier blocking unauthorized network traffic"
+    ]
+  },
+  {
+    word: "ENCRYPT",
+    category: "Tech & Cyber",
+    clues: [
+      "An action vital to modern digital privacy",
+      "Transforms readable plaintext into scrambled ciphertext",
+      "To lock data with a cryptographic key so intruders cannot read it"
+    ]
+  },
+  {
+    word: "QUANTUM",
+    category: "Tech & Cyber",
+    clues: [
+      "Cutting-edge frontier of physics and computing",
+      "Relies on qubits, superposition, and entanglement",
+      "Named after the smallest discrete packet of energy"
+    ]
+  },
+  {
+    word: "PROTOCOL",
+    category: "Tech & Cyber",
+    clues: [
+      "A formal blueprint for digital communication",
+      "HTTP, TCP, and Bluetooth are widely used examples",
+      "Standardized rules governing how computers exchange data"
+    ]
+  },
+  {
+    word: "COMPILER",
+    category: "Tech & Cyber",
+    clues: [
+      "A core software engineering tool",
+      "Validates syntax and optimizes code prior to execution",
+      "Translates human-written source code into machine language"
+    ]
+  },
+  {
+    word: "BANDWIDTH",
+    category: "Tech & Cyber",
+    clues: [
+      "A crucial performance metric for internet links",
+      "Higher capacity enables smoother 4K video and fast downloads",
+      "The maximum data transfer rate of a network connection"
+    ]
+  },
+  {
+    word: "MAINFRAME",
+    category: "Tech & Cyber",
+    clues: [
+      "Heavy-duty enterprise computing hardware",
+      "Still processes billions of banking and airline transactions",
+      "A massive central computer built for extreme reliability"
+    ]
+  },
+  {
+    word: "CYBERNETIC",
+    category: "Tech & Cyber",
+    clues: [
+      "Relating to feedback loops and high-tech augmentation",
+      "Frequently appears in sci-fi bionic limb concepts",
+      "Describing systems that merge biological and electronic control"
+    ]
+  },
+  {
+    word: "BLOCKCHAIN",
+    category: "Tech & Cyber",
+    clues: [
+      "A distributed database architecture",
+      "Records transactions transparently without a central authority",
+      "A cryptographically linked chain of immutable data blocks"
+    ]
+  },
+  {
+    word: "PIXELATED",
+    category: "Tech & Cyber",
+    clues: [
+      "A recognizable visual artifact in digital imagery",
+      "Appears when a low-resolution graphic is enlarged too much",
+      "Displaying visible blocky square picture elements"
+    ]
+  },
+  {
+    word: "DEBUGGING",
+    category: "Tech & Cyber",
+    clues: [
+      "A daily ritual for software engineers",
+      "Involves stack traces, breakpoints, and inspecting logs",
+      "The process of hunting down and fixing defects in code"
+    ]
+  },
+  {
+    word: "TELEMETRY",
+    category: "Tech & Cyber",
+    clues: [
+      "Automated remote monitoring technology",
+      "Used heavily in rocket launches and Formula 1 racing",
+      "Collecting and transmitting live sensor data from afar"
+    ]
+  },
+
+  // 3. Nature & Wildlife (13)
+  {
+    word: "CHAMELEON",
+    category: "Nature & Wildlife",
+    clues: [
+      "A specialized tree-dwelling reptile",
+      "Has independently rotating eyes and a ballistic tongue",
+      "Famous for shifting skin color to communicate or camouflage"
+    ]
+  },
+  {
+    word: "AVALANCHE",
+    category: "Nature & Wildlife",
+    clues: [
+      "A sudden, dramatic alpine hazard",
+      "Often triggered by unstable snowpack layers on steep slopes",
+      "A massive rapid slide of snow and ice down a mountainside"
+    ]
+  },
+  {
+    word: "MANGROVE",
+    category: "Nature & Wildlife",
+    clues: [
+      "A resilient tropical coastal ecosystem",
+      "Shields shorelines from storm surges and coastal erosion",
+      "Salt-tolerant trees with tangled stilt roots in tidal waters"
+    ]
+  },
+  {
+    word: "PENGUIN",
+    category: "Nature & Wildlife",
+    clues: [
+      "A beloved Southern Hemisphere seabird",
+      "Glides effortlessly underwater using flipper-like wings",
+      "Flightless tuxedo-patterned bird thriving in Antarctica"
+    ]
+  },
+  {
+    word: "ALBATROSS",
+    category: "Nature & Wildlife",
+    clues: [
+      "A legendary long-distance ocean wanderer",
+      "Can soar for hours across waves without flapping once",
+      "Seabird boasting the widest wingspan of any living bird"
+    ]
+  },
+  {
+    word: "MONSOON",
+    category: "Nature & Wildlife",
+    clues: [
+      "A powerful regional weather cycle",
+      "Critical to agriculture across South and Southeast Asia",
+      "A seasonal reversing wind bringing torrential summer rains"
+    ]
+  },
+  {
+    word: "FJORD",
+    category: "Nature & Wildlife",
+    clues: [
+      "A dramatic northern coastal landform",
+      "Carved slowly over millennia by retreating Ice Age glaciers",
+      "A deep, narrow sea inlet flanked by steep cliffs in Norway"
+    ]
+  },
+  {
+    word: "PLATYPUS",
+    category: "Nature & Wildlife",
+    clues: [
+      "One of Australia's strangest native animals",
+      "Hunts underwater prey using bill electroreception",
+      "An egg-laying, duck-billed, beaver-tailed mammal"
+    ]
+  },
+  {
+    word: "SEQUOIA",
+    category: "Nature & Wildlife",
+    clues: [
+      "A botanical giant of California mountain slopes",
+      "Protected by thick, fire-resistant reddish bark",
+      "Among the largest and oldest redwood trees on Earth"
+    ]
+  },
+  {
+    word: "STALACTITE",
+    category: "Nature & Wildlife",
+    clues: [
+      "A mineral formation inside limestone caverns",
+      "Grows slowly from dripping calcium-rich water over centuries",
+      "An icicle-shaped rock hanging tightly from a cave ceiling"
+    ]
+  },
+  {
+    word: "ARCHIPELAGO",
+    category: "Nature & Wildlife",
+    clues: [
+      "A geographic pattern found across world oceans",
+      "Indonesia, Japan, and Hawaii are notable examples",
+      "A chain or extensive cluster of islands grouped together"
+    ]
+  },
+  {
+    word: "CHLOROPHYLL",
+    category: "Nature & Wildlife",
+    clues: [
+      "A vital biochemical compound inside plants",
+      "Absorbs red and blue sunlight to fuel photosynthesis",
+      "The natural pigment responsible for making foliage green"
+    ]
+  },
+  {
+    word: "WOLVERINE",
+    category: "Nature & Wildlife",
+    clues: [
+      "A fierce, solitary northern carnivore",
+      "Shares its name with an iconic comic book mutant",
+      "The largest land-dwelling member of the weasel family"
+    ]
+  },
+
+  // 4. Science & Chemistry (13)
+  {
+    word: "CATALYST",
+    category: "Science & Chemistry",
+    clues: [
+      "A key accelerator in chemical reactions",
+      "Lowers the activation energy needed for a process",
+      "A substance that speeds up a reaction without being consumed"
+    ]
+  },
+  {
+    word: "ISOTOPE",
+    category: "Science & Chemistry",
+    clues: [
+      "A nuclear variant of a chemical element",
+      "Carbon-14 is a famous radioactive example used in dating",
+      "Atoms with equal protons but a different number of neutrons"
+    ]
+  },
+  {
+    word: "MOLECULE",
+    category: "Science & Chemistry",
+    clues: [
+      "A microscopic building block of matter",
+      "Water consists of two hydrogen and one oxygen joined together",
+      "Two or more atoms chemically bonded as a single unit"
+    ]
+  },
+  {
+    word: "ELECTRON",
+    category: "Science & Chemistry",
+    clues: [
+      "A fundamental subatomic particle",
+      "Its movement through conductors creates electric current",
+      "A negatively charged particle orbiting an atomic nucleus"
+    ]
+  },
+  {
+    word: "ENTROPY",
+    category: "Science & Chemistry",
+    clues: [
+      "A central law in thermodynamics",
+      "Always tends to increase over time in an isolated system",
+      "A scientific measure of randomness or disorder"
+    ]
+  },
+  {
+    word: "OSMOSIS",
+    category: "Science & Chemistry",
+    clues: [
+      "A crucial biological transport phenomenon",
+      "Helps plant roots absorb moisture from surrounding soil",
+      "Movement of water molecules across a semipermeable membrane"
+    ]
+  },
+  {
+    word: "SPECTRUM",
+    category: "Science & Chemistry",
+    clues: [
+      "A continuous band of scientific wavelengths",
+      "Revealed when white light splits through a glass prism",
+      "The full range of electromagnetic waves or rainbow colors"
+    ]
+  },
+  {
+    word: "TITANIUM",
+    category: "Science & Chemistry",
+    clues: [
+      "A prized aerospace and medical metal",
+      "Named after the mighty Titans of Greek mythology",
+      "Lightweight, corrosion-resistant element with atomic number 22"
+    ]
+  },
+  {
+    word: "VACCINE",
+    category: "Science & Chemistry",
+    clues: [
+      "A triumph of modern immunology",
+      "Trains white blood cells to recognize future pathogens",
+      "A biological preparation providing acquired immunity to disease"
+    ]
+  },
+  {
+    word: "GRAVITON",
+    category: "Science & Chemistry",
+    clues: [
+      "A hypothetical elementary particle",
+      "Bridges quantum mechanics with spacetime curvature",
+      "Theoretical massless boson that mediates gravitational force"
+    ]
+  },
+  {
+    word: "SYNAPSE",
+    category: "Science & Chemistry",
+    clues: [
+      "A microscopic junction inside the nervous system",
+      "Relays electrical impulses or chemical neurotransmitters",
+      "The tiny gap where one brain neuron signals another"
+    ]
+  },
+  {
+    word: "PHOSPHORUS",
+    category: "Science & Chemistry",
+    clues: [
+      "A highly reactive nonmetallic element",
+      "Essential to DNA backbones and matchbox striker strips",
+      "Chemical element whose Greek name means light-bringer"
+    ]
+  },
+  {
+    word: "CENTRIFUGE",
+    category: "Science & Chemistry",
+    clues: [
+      "Standard laboratory separation equipment",
+      "Giant versions also train astronauts for high G-forces",
+      "A high-speed spinning machine that separates fluids by density"
+    ]
+  },
+
+  // 5. Myth & History (13)
+  {
+    word: "VALKYRIE",
+    category: "Myth & History",
+    clues: [
+      "A legendary figure from Norse mythology",
+      "Often depicted riding winged steeds across battlefields",
+      "Chooser of the slain who escorts fallen heroes to Valhalla"
+    ]
+  },
+  {
+    word: "PHARAOH",
+    category: "Myth & History",
+    clues: [
+      "An ancient Mediterranean title of authority",
+      "Revered as a living intermediary between gods and mortals",
+      "The supreme ruler of ancient Egypt, buried in grand tombs"
+    ]
+  },
+  {
+    word: "LABYRINTH",
+    category: "Myth & History",
+    clues: [
+      "A legendary architectural puzzle from Crete",
+      "Designed by the master craftsman Daedalus",
+      "A bewildering maze of twisting corridors built for a monster"
+    ]
+  },
+  {
+    word: "OLYMPUS",
+    category: "Myth & History",
+    clues: [
+      "A towering landmark in northern Greece",
+      "Celebrated in epic poetry by Homer and Hesiod",
+      "The sacred mountain home of Zeus and the twelve Greek gods"
+    ]
+  },
+  {
+    word: "SPARTAN",
+    category: "Myth & History",
+    clues: [
+      "Associated with rigor, discipline, and austere living",
+      "Fought beside King Leonidas at the Pass of Thermopylae",
+      "An elite warrior citizen of ancient Laconia in Greece"
+    ]
+  },
+  {
+    word: "EXCALIBUR",
+    category: "Myth & History",
+    clues: [
+      "A fabled relic of medieval British legend",
+      "Linked to the Lady of the Lake and the court of Camelot",
+      "The mythical sword wielded by King Arthur"
+    ]
+  },
+  {
+    word: "MINOTAUR",
+    category: "Myth & History",
+    clues: [
+      "A feared creature of ancient Greek legend",
+      "Ultimately defeated by the Athenian hero Theseus",
+      "A monster with the body of a man and the head of a bull"
+    ]
+  },
+  {
+    word: "GLADIATOR",
+    category: "Myth & History",
+    clues: [
+      "A famous figure of ancient Roman spectacle",
+      "Trained in specialized schools for public amphitheaters",
+      "An armed combatant who fought in the Colosseum"
+    ]
+  },
+  {
+    word: "SAMURAI",
+    category: "Myth & History",
+    clues: [
+      "An iconic warrior class of feudal Asia",
+      "Guided by the strict honor code known as Bushido",
+      "Armor-clad Japanese swordsman wielding a curved katana"
+    ]
+  },
+  {
+    word: "HIEROGLYPH",
+    category: "Myth & History",
+    clues: [
+      "An ancient form of visual language",
+      "Deciphered in the 1820s using the Rosetta Stone",
+      "Pictographic sacred writing carved on Egyptian monuments"
+    ]
+  },
+  {
+    word: "RENAISSANCE",
+    category: "Myth & History",
+    clues: [
+      "A pivotal European cultural awakening",
+      "Originated in 14th-century Florence, Italy",
+      "Era of Da Vinci and Michelangelo whose name means rebirth"
+    ]
+  },
+  {
+    word: "CATAPULT",
+    category: "Myth & History",
+    clues: [
+      "A classic medieval siege weapon",
+      "Relied on stored torsion or counterweight tension",
+      "A wooden war machine built to hurl boulders over castle walls"
+    ]
+  },
+  {
+    word: "PHOENIX",
+    category: "Myth & History",
+    clues: [
+      "A timeless mythological symbol of renewal",
+      "Featured across ancient Egyptian and Greek folklore",
+      "An immortal firebird that rises reborn from its own ashes"
+    ]
+  },
+
+  // 6. Cinema & Pop Culture (13)
+  {
+    word: "BLOCKBUSTER",
+    category: "Cinema & Pop Culture",
+    clues: [
+      "A major milestone in box-office entertainment",
+      "Jaws and Star Wars pioneered the summer release format",
+      "A massively budgeted, wildly popular hit movie"
+    ]
+  },
+  {
+    word: "SOUNDTRACK",
+    category: "Cinema & Pop Culture",
+    clues: [
+      "An essential emotional layer of film and games",
+      "Composers like John Williams and Hans Zimmer craft iconic ones",
+      "The curated collection of music accompanying a movie"
+    ]
+  },
+  {
+    word: "PROTAGONIST",
+    category: "Cinema & Pop Culture",
+    clues: [
+      "A structural pillar of storytelling",
+      "Undergoes the central character arc and faces the antagonist",
+      "The main character or hero driving a narrative forward"
+    ]
+  },
+  {
+    word: "CLIFFHANGER",
+    category: "Cinema & Pop Culture",
+    clues: [
+      "A suspenseful narrative technique",
+      "Frequently deployed right before a season finale ends",
+      "An abrupt ending leaving characters in unresolved peril"
+    ]
+  },
+  {
+    word: "ANIMATION",
+    category: "Cinema & Pop Culture",
+    clues: [
+      "A versatile visual filmmaking art form",
+      "Spans hand-drawn cels, stop-motion clay, and 3D CGI",
+      "Creating the illusion of motion from sequential frames"
+    ]
+  },
+  {
+    word: "DIRECTOR",
+    category: "Cinema & Pop Culture",
+    clues: [
+      "A leading creative authority on a film set",
+      "Guides actors, camera framing, and final editorial vision",
+      "The filmmaker who calls Action and Cut"
+    ]
+  },
+  {
+    word: "SCREENPLAY",
+    category: "Cinema & Pop Culture",
+    clues: [
+      "The written blueprint of a motion picture",
+      "Formatted with sluglines, stage directions, and dialogue",
+      "A complete movie script prepared for production"
+    ]
+  },
+  {
+    word: "DYSTOPIA",
+    category: "Cinema & Pop Culture",
+    clues: [
+      "A staple setting of speculative fiction",
+      "Explored in classics like 1984, Blade Runner, and The Matrix",
+      "An imagined oppressive society marked by decay or control"
+    ]
+  },
+  {
+    word: "FRANCHISE",
+    category: "Cinema & Pop Culture",
+    clues: [
+      "A powerhouse modern entertainment business model",
+      "Expands across sequels, spin-offs, merchandise, and parks",
+      "A multi-installment media series sharing one universe"
+    ]
+  },
+  {
+    word: "CAMEO",
+    category: "Cinema & Pop Culture",
+    clues: [
+      "A fun surprise for observant moviegoers",
+      "Stan Lee became famous for making these in superhero films",
+      "A brief, often uncredited guest appearance by a famous face"
+    ]
+  },
+  {
+    word: "MONTAGE",
+    category: "Cinema & Pop Culture",
+    clues: [
+      "A classic film editing sequence",
+      "Often paired with upbeat music for a training scene",
+      "Rapidly cut clips compressing weeks of progress into seconds"
+    ]
+  },
+  {
+    word: "SPOTLIGHT",
+    category: "Cinema & Pop Culture",
+    clues: [
+      "A staple lighting fixture in theater and live shows",
+      "Symbolizes sudden fame or intense public scrutiny",
+      "A focused, intense beam of light illuminating one performer"
+    ]
+  },
+  {
+    word: "TRILOGY",
+    category: "Cinema & Pop Culture",
+    clues: [
+      "A beloved format for epic sagas",
+      "The Lord of the Rings and Back to the Future are iconic examples",
+      "A connected series of exactly three films, books, or games"
+    ]
+  },
+
+  // 7. Food & Culinary (13)
+  {
+    word: "CROISSANT",
+    category: "Food & Culinary",
+    clues: [
+      "A prized morning bakery staple",
+      "Crafted by folding cold butter repeatedly into laminated dough",
+      "A flaky, crescent-shaped French pastry"
+    ]
+  },
+  {
+    word: "ESPRESSO",
+    category: "Food & Culinary",
+    clues: [
+      "A bold Italian cafe essential",
+      "Forms the base for lattes, macchiatos, and cappuccinos",
+      "Concentrated coffee brewed by forcing hot water under pressure"
+    ]
+  },
+  {
+    word: "AVOCADO",
+    category: "Food & Culinary",
+    clues: [
+      "A nutrient-rich tropical fruit",
+      "Prized for its creamy green flesh and single large pit",
+      "Key ingredient mashed on toast or blended into Mexican dip"
+    ]
+  },
+  {
+    word: "JALAPENO",
+    category: "Food & Culinary",
+    clues: [
+      "A popular ingredient in Tex-Mex cuisine",
+      "Named after the Mexican city of Xalapa",
+      "A medium-hot green chili pepper often stuffed or pickled"
+    ]
+  },
+  {
+    word: "TIRAMISU",
+    category: "Food & Culinary",
+    clues: [
+      "A celebrated Italian restaurant dessert",
+      "Its name translates roughly to pick me up",
+      "Layered mascarpone and cocoa treat with coffee-soaked biscuits"
+    ]
+  },
+  {
+    word: "SAFFRON",
+    category: "Food & Culinary",
+    clues: [
+      "The most expensive spice in the world by weight",
+      "Harvested painstakingly by hand from purple crocus flowers",
+      "Crimson threads giving paella and risotto a golden hue"
+    ]
+  },
+  {
+    word: "PISTACHIO",
+    category: "Food & Culinary",
+    clues: [
+      "A distinctive Mediterranean snack and gelato flavor",
+      "Its hard beige shell naturally splits open when ripe",
+      "A vibrant pale-green culinary nut in the cashew family"
+    ]
+  },
+  {
+    word: "GAZPACHO",
+    category: "Food & Culinary",
+    clues: [
+      "A refreshing dish originating in southern Spain",
+      "Blends ripe tomatoes, cucumbers, peppers, garlic, and olive oil",
+      "A classic Andalusian vegetable soup always served chilled"
+    ]
+  },
+  {
+    word: "CARDAMOM",
+    category: "Food & Culinary",
+    clues: [
+      "A fragrant aromatic spice from South Asia",
+      "Key to masala chai, Nordic buns, and rich curries",
+      "Small green or black seed pods prized for citrusy warmth"
+    ]
+  },
+  {
+    word: "SOURDOUGH",
+    category: "Food & Culinary",
+    clues: [
+      "An ancient artisan baking tradition",
+      "Relies on a bubbling starter culture rather than store yeast",
+      "Crusty, tangy bread leavened by wild fermentation"
+    ]
+  },
+  {
+    word: "GUACAMOLE",
+    category: "Food & Culinary",
+    clues: [
+      "A crowd-favorite party appetizer",
+      "Traditionally ground in a volcanic stone bowl with lime",
+      "Creamy Mexican avocado dip studded with cilantro and onion"
+    ]
+  },
+  {
+    word: "PROSCIUTTO",
+    category: "Food & Culinary",
+    clues: [
+      "A prized delicacy of northern Italy",
+      "Parma and San Daniele are its most famous producing regions",
+      "Paper-thin slices of dry-cured Italian ham often served with melon"
+    ]
+  },
+  {
+    word: "MERINGUE",
+    category: "Food & Culinary",
+    clues: [
+      "An airy, delicate pastry component",
+      "Used to crown lemon pies or form crisp pavlova shells",
+      "Stiff peaks of whipped egg whites beaten with fine sugar"
+    ]
+  },
+
+  // 8. Music & Arts (13)
+  {
+    word: "SYMPHONY",
+    category: "Music & Arts",
+    clues: [
+      "A grand cornerstone of Western classical music",
+      "Typically structured across four contrasting movements",
+      "An extended musical composition written for a full orchestra"
+    ]
+  },
+  {
+    word: "SAXOPHONE",
+    category: "Music & Arts",
+    clues: [
+      "A charismatic wind instrument invented in the 1840s",
+      "Despite its brass body, it is classified as a woodwind",
+      "Signature curved-bell single-reed horn of jazz and blues"
+    ]
+  },
+  {
+    word: "CRESCENDO",
+    category: "Music & Arts",
+    clues: [
+      "An expressive dynamic marking in sheet music",
+      "Notated visually by a widening angle bracket symbol",
+      "Italian musical term instructing players to grow louder"
+    ]
+  },
+  {
+    word: "MOSAIC",
+    category: "Music & Arts",
+    clues: [
+      "A durable decorative art form dating to antiquity",
+      "Adorns Byzantine domes, Roman floors, and Catalan parks",
+      "An image assembled from thousands of tiny colored glass tiles"
+    ]
+  },
+  {
+    word: "WATERCOLOR",
+    category: "Music & Arts",
+    clues: [
+      "A luminous fine-art painting medium",
+      "Prized for translucent washes and soft edges on textured paper",
+      "Paint made from pigments suspended in a water-soluble binder"
+    ]
+  },
+  {
+    word: "BARITONE",
+    category: "Music & Arts",
+    clues: [
+      "A rich, resonant range in vocal and brass music",
+      "Sits comfortably between a tenor and a bass",
+      "The most common mid-low male singing voice classification"
+    ]
+  },
+  {
+    word: "HARMONICA",
+    category: "Music & Arts",
+    clues: [
+      "A compact, pocket-sized musical instrument",
+      "Staple of American folk, country, and Chicago blues",
+      "A free-reed wind instrument played by blowing and drawing air"
+    ]
+  },
+  {
+    word: "ORIGAMI",
+    category: "Music & Arts",
+    clues: [
+      "A meditative traditional craft from Japan",
+      "Requires precision, symmetry, and zero glue or scissors",
+      "The delicate art of folding flat paper into cranes and shapes"
+    ]
+  },
+  {
+    word: "SCULPTURE",
+    category: "Music & Arts",
+    clues: [
+      "A tactile three-dimensional fine art",
+      "Created by carving marble, casting bronze, or modeling clay",
+      "Michelangelo's David and Rodin's Thinker are famous examples"
+    ]
+  },
+  {
+    word: "VIRTUOSO",
+    category: "Music & Arts",
+    clues: [
+      "A title reserved for extraordinary artistic mastery",
+      "Paganini and Franz Liszt epitomized this rare status",
+      "A musician displaying dazzling, unmatched technical brilliance"
+    ]
+  },
+  {
+    word: "TEMPO",
+    category: "Music & Arts",
+    clues: [
+      "A fundamental element of musical feel",
+      "Measured accurately in beats per minute with a metronome",
+      "The overall speed or pace at which a musical piece is played"
+    ]
+  },
+  {
+    word: "CALLIGRAPHY",
+    category: "Music & Arts",
+    clues: [
+      "An expressive visual craft using ink and nibs",
+      "Revered in East Asian brushwork and illuminated manuscripts",
+      "The fine art of decorative, flowing hand lettering"
+    ]
+  },
+  {
+    word: "FRESCO",
+    category: "Music & Arts",
+    clues: [
+      "A monumental Renaissance painting technique",
+      "Used by Michelangelo across the Sistine Chapel ceiling",
+      "Mural painted rapidly onto freshly laid wet lime plaster"
+    ]
+  },
+
+  // 9. Adventure & Places (13)
+  {
+    word: "COMPASS",
+    category: "Adventure & Places",
+    clues: [
+      "An indispensable tool for explorers and mariners",
+      "Revolutionized open-ocean navigation in the Age of Discovery",
+      "A magnetized needle instrument that points toward north"
+    ]
+  },
+  {
+    word: "EXPEDITION",
+    category: "Adventure & Places",
+    clues: [
+      "An ambitious organized journey into the unknown",
+      "Shackleton's Antarctic voyage is a legendary example",
+      "A long trek mounted for research or geographic discovery"
+    ]
+  },
+  {
+    word: "CITADEL",
+    category: "Adventure & Places",
+    clues: [
+      "An imposing historic architectural stronghold",
+      "Built overlooking a city as the ultimate refuge in wartime",
+      "A heavily fortified fortress guarding the heart of an old town"
+    ]
+  },
+  {
+    word: "LIGHTHOUSE",
+    category: "Adventure & Places",
+    clues: [
+      "A coastal landmark standing against crashing waves",
+      "Uses rotating Fresnel lenses to sweep miles of dark water",
+      "A tall shoreline beacon tower guiding ships safely past rocks"
+    ]
+  },
+  {
+    word: "SAVANNAH",
+    category: "Adventure & Places",
+    clues: [
+      "An iconic sun-drenched biome",
+      "Home to migrating wildebeest, giraffes, and acacia trees",
+      "A vast tropical grassland dotted with widely spaced trees"
+    ]
+  },
+  {
+    word: "GLACIER",
+    category: "Adventure & Places",
+    clues: [
+      "A colossal slow-moving force of nature",
+      "Stores a huge share of Earth's freshwater in polar regions",
+      "A dense river of compressed ancient ice creeping down valleys"
+    ]
+  },
+  {
+    word: "CANYON",
+    category: "Adventure & Places",
+    clues: [
+      "A breathtaking geological landmark",
+      "Sculpted over millions of years by persistent river erosion",
+      "A deep, steep-walled gorge like Arizona's Grand landmark"
+    ]
+  },
+  {
+    word: "OASIS",
+    category: "Adventure & Places",
+    clues: [
+      "A life-saving stop along ancient caravan routes",
+      "Fed by underground aquifers rising near the surface",
+      "A lush, palm-fringed patch of water and greenery in a desert"
+    ]
+  },
+  {
+    word: "MONOLITH",
+    category: "Adventure & Places",
+    clues: [
+      "A striking vertical geological or carved formation",
+      "Australia's Uluru and sci-fi's 2001 slab share this name",
+      "A massive single upright block or pillar of solid stone"
+    ]
+  },
+  {
+    word: "CATACOMB",
+    category: "Adventure & Places",
+    clues: [
+      "An eerie subterranean labyrinth",
+      "Famous networks stretch beneath both Rome and Paris",
+      "An underground tunnel system of chambers used as ancient tombs"
+    ]
+  },
+  {
+    word: "FRONTIER",
+    category: "Adventure & Places",
+    clues: [
+      "The outermost edge of mapped territory",
+      "Star Trek famously called space the final one",
+      "The remote borderland between settled lands and wilderness"
+    ]
+  },
+  {
+    word: "OBSERVATORY",
+    category: "Adventure & Places",
+    clues: [
+      "A quiet sanctuary perched atop dark mountain peaks",
+      "Features a rotating dome that opens to the night sky",
+      "A scientific facility built to house giant astronomical telescopes"
+    ]
+  },
+  {
+    word: "PENINSULA",
+    category: "Adventure & Places",
+    clues: [
+      "A prominent coastal geographic formation",
+      "Italy, Iberia, Florida, and Korea are prime examples",
+      "A landmass projecting into water and bordered on three sides"
+    ]
+  },
+
+  // 10. High-Value Rare Letters (13)
+  {
+    word: "QUARTZ",
+    category: "High-Value Rare Letters",
+    clues: [
+      "One of the most abundant minerals in Earth's crust",
+      "Its precise piezoelectric vibration keeps wristwatches accurate",
+      "A crystalline silicon dioxide gemstone including amethyst"
+    ]
+  },
+  {
+    word: "ZEPHYR",
+    category: "High-Value Rare Letters",
+    clues: [
+      "A poetic word for a pleasant weather phenomenon",
+      "Named after the Greek god of the west wind",
+      "A soft, gentle, refreshing breeze"
+    ]
+  },
+  {
+    word: "SPHINX",
+    category: "High-Value Rare Letters",
+    clues: [
+      "An enigmatic guardian of antiquity",
+      "Posed a famous riddle to travelers outside Greek Thebes",
+      "Mythical creature with a lion's body and human head near Giza"
+    ]
+  },
+  {
+    word: "OXYGEN",
+    category: "High-Value Rare Letters",
+    clues: [
+      "A colorless gas indispensable to complex life",
+      "Makes up roughly twenty-one percent of Earth's atmosphere",
+      "Element number 8 that fuels respiration and combustion"
+    ]
+  },
+  {
+    word: "VORTEX",
+    category: "High-Value Rare Letters",
+    clues: [
+      "A dynamic phenomenon in fluid mechanics",
+      "Seen in bathtub drains, whirlpools, and raging tornadoes",
+      "A mass of whirling fluid or air pulling inward around an axis"
+    ]
+  },
+  {
+    word: "JUXTAPOSE",
+    category: "High-Value Rare Letters",
+    clues: [
+      "A sharp analytical and artistic verb",
+      "Used by photographers and writers to highlight stark contrast",
+      "To place two contrasting ideas or objects side by side"
+    ]
+  },
+  {
+    word: "ZODIAC",
+    category: "High-Value Rare Letters",
+    clues: [
+      "An ancient celestial coordinate belt",
+      "Divided into twelve distinct star signs along the ecliptic",
+      "Astrological circle featuring Aries, Scorpio, and Aquarius"
+    ]
+  },
+  {
+    word: "KALEIDOSCOPE",
+    category: "High-Value Rare Letters",
+    clues: [
+      "A mesmerizing optical toy invented in 1816",
+      "Uses angled internal mirrors and tumbling colored glass beads",
+      "A handheld tube producing ever-changing symmetrical patterns"
+    ]
+  },
+  {
+    word: "EQUINOX",
+    category: "High-Value Rare Letters",
+    clues: [
+      "A biannual astronomical balancing point",
+      "Happens every March and September as the Sun crosses the equator",
+      "The day when daytime and nighttime are nearly equal worldwide"
+    ]
+  },
+  {
+    word: "BLIZZARD",
+    category: "High-Value Rare Letters",
+    clues: [
+      "A dangerous extreme winter weather event",
+      "Brings whiteout visibility and bone-chilling wind gusts",
+      "A severe snowstorm with sustained winds above 35 mph"
+    ]
+  },
+  {
+    word: "PARADOX",
+    category: "High-Value Rare Letters",
+    clues: [
+      "A mind-bending puzzle in logic and time travel",
+      "The grandfather scenario is a famous sci-fi example",
+      "A seemingly self-contradictory statement that may still hold truth"
+    ]
+  },
+  {
+    word: "JACKPOT",
+    category: "High-Value Rare Letters",
+    clues: [
+      "A thrilling windfall in games of chance",
+      "Originally a poker term before conquering slot machines",
+      "The grand accumulated top prize won all at once"
+    ]
+  },
+  {
+    word: "QUIZZICAL",
+    category: "High-Value Rare Letters",
+    clues: [
+      "A distinctive facial expression or inquisitive tone",
+      "Often accompanied by a tilted head and a raised eyebrow",
+      "Showing mild amusement, curiosity, or puzzled questioning"
+    ]
+  }
+];
+
+// Universal export: Window global for browser scripts and module export for build tools / node
+if (typeof window !== "undefined") {
+  window.WORD_BANK = WORD_BANK;
+}
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = WORD_BANK;
+}

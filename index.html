@@ -1,9 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Hangman + | Orbital Tether Survival</title>
+  <link rel="icon" type="image/svg+xml"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='15' r='12' fill='%23f8fafc' stroke='%2394a3b8' stroke-width='1.5'/%3E%3Cpath d='M10 24 Q16 27 22 24' stroke='%2364748b' stroke-width='2' stroke-linecap='round' fill='none'/%3E%3Crect x='8.5' y='9.5' width='15' height='11' rx='5.5' fill='%23070d1b' stroke='%2322d3ee' stroke-width='1.5'/%3E%3Cpath d='M11 12.5 Q16 11 20 14' stroke='%237dd3fc' stroke-width='1.5' stroke-linecap='round' fill='none'/%3E%3Ccircle cx='4' cy='15' r='1.5' fill='%230ea5e9'/%3E%3Ccircle cx='28' cy='15' r='1.5' fill='%230ea5e9'/%3E%3C/svg%3E" />
   <style>
     /* =========================================================================
        1. DESIGN TOKENS & GLOBAL BASE (100% SELF-CONTAINED, ZERO EXTERNAL CDNS)
@@ -36,11 +39,14 @@
       --shadow-panel: 0 14px 36px rgba(2, 6, 23, 0.72), inset 0 1px 0 rgba(255, 255, 255, 0.06);
     }
 
-    *, *::before, *::after {
+    *,
+    *::before,
+    *::after {
       box-sizing: border-box;
     }
 
-    html, body {
+    html,
+    body {
       margin: 0;
       padding: 0;
       background-color: #060a14;
@@ -62,9 +68,12 @@
       flex-direction: column;
     }
 
-    button, select, input {
+    button,
+    select,
+    input {
       font-family: inherit;
       color: inherit;
+      touch-action: manipulation;
     }
 
     button {
@@ -73,6 +82,14 @@
 
     button:disabled {
       cursor: not-allowed;
+    }
+
+    button:focus-visible,
+    select:focus-visible,
+    input:focus-visible {
+      outline: 2px solid var(--cyan);
+      outline-offset: 2px;
+      box-shadow: 0 0 14px rgba(34, 211, 238, 0.6);
     }
 
     /* =========================================================================
@@ -95,8 +112,15 @@
     }
 
     @keyframes twinkleStar {
-      0% { opacity: 0.2; transform: scale(0.85); }
-      100% { opacity: 0.95; transform: scale(1.18); }
+      0% {
+        opacity: 0.2;
+        transform: scale(0.85);
+      }
+
+      100% {
+        opacity: 0.95;
+        transform: scale(1.18);
+      }
     }
 
     .cosmic-entity-node {
@@ -161,19 +185,24 @@
     .brand-group {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
     }
 
     .brand-emblem {
-      width: 44px;
-      height: 44px;
-      border-radius: 13px;
-      background: linear-gradient(135deg, #06b6d4 0%, #6366f1 100%);
+      width: 58px;
+      height: 58px;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 0 22px rgba(34, 211, 238, 0.32);
+      background: radial-gradient(circle, rgba(34, 211, 238, 0.14) 0%, rgba(15, 23, 42, 0) 72%);
+      border: none;
+      box-shadow: none;
       flex-shrink: 0;
+      transition: transform 0.25s ease;
+    }
+
+    .brand-emblem:hover {
+      transform: scale(1.06);
     }
 
     .brand-title-row {
@@ -269,10 +298,21 @@
       color: #ffffff;
     }
 
-    .val-cyan { color: var(--cyan); }
-    .val-emerald { color: #34d399; }
-    .val-amber { color: #fbbf24; }
-    .val-violet { color: #c084fc; }
+    .val-cyan {
+      color: var(--cyan);
+    }
+
+    .val-emerald {
+      color: #34d399;
+    }
+
+    .val-amber {
+      color: #fbbf24;
+    }
+
+    .val-violet {
+      color: #c084fc;
+    }
 
     .header-controls {
       display: flex;
@@ -313,39 +353,6 @@
       gap: 10px;
       padding-top: 10px;
       border-top: 1px solid rgba(148, 163, 184, 0.14);
-    }
-
-    .sector-controls {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .sector-label {
-      font-family: var(--font-mono);
-      font-size: 0.7rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.07em;
-      color: var(--text-muted);
-    }
-
-    .sector-select {
-      background: #0b1224;
-      border: 1px solid rgba(56, 189, 248, 0.35);
-      border-radius: 9px;
-      padding: 6px 11px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: #f8fafc;
-      outline: none;
-      cursor: pointer;
-    }
-
-    .sector-select:focus, .sector-select:hover {
-      border-color: var(--cyan);
-      box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.18);
     }
 
     .deck-badge {
@@ -391,10 +398,13 @@
     }
 
     @keyframes hullAlertPulse {
-      0%, 100% {
+
+      0%,
+      100% {
         border-color: rgba(244, 63, 94, 0.7);
         box-shadow: 0 0 24px rgba(244, 63, 94, 0.28), inset 0 0 26px rgba(244, 63, 94, 0.15);
       }
+
       50% {
         border-color: rgba(251, 113, 133, 1);
         box-shadow: 0 0 40px rgba(244, 63, 94, 0.5), inset 0 0 40px rgba(244, 63, 94, 0.28);
@@ -410,6 +420,7 @@
         border-color: rgba(16, 185, 129, 0.95);
         box-shadow: 0 0 38px rgba(16, 185, 129, 0.5), inset 0 0 38px rgba(34, 211, 238, 0.22);
       }
+
       100% {
         border-color: rgba(52, 211, 153, 0.6);
         box-shadow: 0 0 22px rgba(16, 185, 129, 0.26), inset 0 0 18px rgba(16, 185, 129, 0.12);
@@ -451,8 +462,17 @@
     }
 
     @keyframes dotPulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.4; transform: scale(0.75); }
+
+      0%,
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      50% {
+        opacity: 0.4;
+        transform: scale(0.75);
+      }
     }
 
     .tether-badge {
@@ -541,8 +561,15 @@
 
     /* SVG Astronaut Animations */
     @keyframes floatZeroG {
-      0%, 100% { transform: translateY(0px) rotate(0deg); }
-      50% { transform: translateY(-6px) rotate(2.5deg); }
+
+      0%,
+      100% {
+        transform: translateY(0px) rotate(0deg);
+      }
+
+      50% {
+        transform: translateY(-6px) rotate(2.5deg);
+      }
     }
 
     .astronaut-idle {
@@ -551,8 +578,15 @@
     }
 
     @keyframes driftLost {
-      0% { transform: translate(0px, 0px) rotate(0deg) scale(1); opacity: 1; }
-      100% { transform: translate(185px, -100px) rotate(140deg) scale(0.32); opacity: 0; }
+      0% {
+        transform: translate(0px, 0px) rotate(0deg) scale(1);
+        opacity: 1;
+      }
+
+      100% {
+        transform: translate(185px, -100px) rotate(140deg) scale(0.32);
+        opacity: 0;
+      }
     }
 
     .astronaut-lost {
@@ -560,8 +594,17 @@
     }
 
     @keyframes shieldPulse {
-      0%, 100% { opacity: 0.68; transform: scale(1) rotate(0deg); }
-      50% { opacity: 1; transform: scale(1.05) rotate(8deg); }
+
+      0%,
+      100% {
+        opacity: 0.68;
+        transform: scale(1) rotate(0deg);
+      }
+
+      50% {
+        opacity: 1;
+        transform: scale(1.05) rotate(8deg);
+      }
     }
 
     .shield-bubble {
@@ -570,9 +613,20 @@
     }
 
     @keyframes sparkFlash {
-      0% { opacity: 1; transform: scale(0.45); }
-      45% { opacity: 1; transform: scale(1.3); }
-      100% { opacity: 0; transform: scale(1.85); }
+      0% {
+        opacity: 1;
+        transform: scale(0.45);
+      }
+
+      45% {
+        opacity: 1;
+        transform: scale(1.3);
+      }
+
+      100% {
+        opacity: 0;
+        transform: scale(1.85);
+      }
     }
 
     .spark-burst {
@@ -582,8 +636,15 @@
     }
 
     @keyframes svgTwinkle {
-      0%, 100% { opacity: 0.25; }
-      50% { opacity: 0.95; }
+
+      0%,
+      100% {
+        opacity: 0.25;
+      }
+
+      50% {
+        opacity: 0.95;
+      }
     }
 
     .svg-star {
@@ -641,9 +702,20 @@
     }
 
     @keyframes clueFlash {
-      0% { box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.75); transform: scale(0.985); }
-      50% { box-shadow: 0 0 24px 3px rgba(34, 211, 238, 0.45); transform: scale(1.015); }
-      100% { box-shadow: 0 0 0 0 rgba(34, 211, 238, 0); transform: scale(1); }
+      0% {
+        box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.75);
+        transform: scale(0.985);
+      }
+
+      50% {
+        box-shadow: 0 0 24px 3px rgba(34, 211, 238, 0.45);
+        transform: scale(1.015);
+      }
+
+      100% {
+        box-shadow: 0 0 0 0 rgba(34, 211, 238, 0);
+        transform: scale(1);
+      }
     }
 
     .clue-card.just-unlocked {
@@ -667,9 +739,17 @@
       color: var(--text-muted);
     }
 
-    .clue-card.unlocked-t1 .clue-tier-title { color: var(--cyan); }
-    .clue-card.unlocked-t2 .clue-tier-title { color: #fbbf24; }
-    .clue-card.unlocked-t3 .clue-tier-title { color: #fb7185; }
+    .clue-card.unlocked-t1 .clue-tier-title {
+      color: var(--cyan);
+    }
+
+    .clue-card.unlocked-t2 .clue-tier-title {
+      color: #fbbf24;
+    }
+
+    .clue-card.unlocked-t3 .clue-tier-title {
+      color: #fb7185;
+    }
 
     .clue-status {
       font-family: var(--font-mono);
@@ -681,9 +761,20 @@
       color: var(--text-muted);
     }
 
-    .clue-card.unlocked-t1 .clue-status { background: var(--emerald-soft); color: #6ee7b7; }
-    .clue-card.unlocked-t2 .clue-status { background: var(--amber-soft); color: #fcd34d; }
-    .clue-card.unlocked-t3 .clue-status { background: var(--crimson-soft); color: #fda4af; }
+    .clue-card.unlocked-t1 .clue-status {
+      background: var(--emerald-soft);
+      color: #6ee7b7;
+    }
+
+    .clue-card.unlocked-t2 .clue-status {
+      background: var(--amber-soft);
+      color: #fcd34d;
+    }
+
+    .clue-card.unlocked-t3 .clue-status {
+      background: var(--crimson-soft);
+      color: #fda4af;
+    }
 
     .clue-body {
       margin: 0;
@@ -791,9 +882,20 @@
     }
 
     @keyframes tileFlipReveal {
-      0% { transform: perspective(400px) rotateX(85deg) scale(0.75); opacity: 0.25; }
-      60% { transform: perspective(400px) rotateX(-12deg) scale(1.09); opacity: 1; }
-      100% { transform: perspective(400px) rotateX(0deg) scale(1); opacity: 1; }
+      0% {
+        transform: perspective(400px) rotateX(85deg) scale(0.75);
+        opacity: 0.25;
+      }
+
+      60% {
+        transform: perspective(400px) rotateX(-12deg) scale(1.09);
+        opacity: 1;
+      }
+
+      100% {
+        transform: perspective(400px) rotateX(0deg) scale(1);
+        opacity: 1;
+      }
     }
 
     .letter-tile.revealed {
@@ -1076,6 +1178,13 @@
       transform: scale(0.94);
     }
 
+    .kb-key.active-key-flash {
+      transform: scale(0.92);
+      filter: brightness(1.4);
+      border-color: var(--cyan);
+      box-shadow: 0 0 16px rgba(34, 211, 238, 0.7);
+    }
+
     .kb-key.tier-250 {
       border-color: rgba(56, 189, 248, 0.45);
     }
@@ -1125,20 +1234,47 @@
       color: var(--text-muted);
     }
 
-    .kb-key.tier-250 .kb-pts { color: #7dd3fc; }
-    .kb-key.tier-500 .kb-pts { color: #fbbf24; }
-    .kb-key.hit .kb-pts { color: #6ee7b7; }
-    .kb-key.miss .kb-pts { color: rgba(251, 113, 133, 0.45); }
+    .kb-key.tier-250 .kb-pts {
+      color: #7dd3fc;
+    }
+
+    .kb-key.tier-500 .kb-pts {
+      color: #fbbf24;
+    }
+
+    .kb-key.hit .kb-pts {
+      color: #6ee7b7;
+    }
+
+    .kb-key.miss .kb-pts {
+      color: rgba(251, 113, 133, 0.45);
+    }
 
     /* =========================================================================
        8. IMPACT SHAKE, FLOATING SCORE POPUPS, TOASTS & MODALS
        ========================================================================= */
     @keyframes hullShake {
-      0%, 100% { transform: translateX(0); }
-      20% { transform: translateX(-7px) rotate(-0.35deg); }
-      40% { transform: translateX(7px) rotate(0.35deg); }
-      60% { transform: translateX(-5px); }
-      80% { transform: translateX(5px); }
+
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+
+      20% {
+        transform: translateX(-7px) rotate(-0.35deg);
+      }
+
+      40% {
+        transform: translateX(7px) rotate(0.35deg);
+      }
+
+      60% {
+        transform: translateX(-5px);
+      }
+
+      80% {
+        transform: translateX(5px);
+      }
     }
 
     .shake-impact {
@@ -1146,9 +1282,20 @@
     }
 
     @keyframes scoreFloatUp {
-      0% { opacity: 0; transform: translate(-50%, 6px) scale(0.84); }
-      20% { opacity: 1; transform: translate(-50%, -12px) scale(1.08); }
-      100% { opacity: 0; transform: translate(-50%, -56px) scale(0.95); }
+      0% {
+        opacity: 0;
+        transform: translate(-50%, 6px) scale(0.84);
+      }
+
+      20% {
+        opacity: 1;
+        transform: translate(-50%, -12px) scale(1.08);
+      }
+
+      100% {
+        opacity: 0;
+        transform: translate(-50%, -56px) scale(0.95);
+      }
     }
 
     .score-popup {
@@ -1208,6 +1355,7 @@
       align-items: center;
       justify-content: center;
       padding: 16px;
+      overflow-y: auto;
     }
 
     .modal-overlay.open {
@@ -1222,6 +1370,9 @@
       border: 1px solid rgba(56, 189, 248, 0.42);
       border-radius: 20px;
       box-shadow: 0 24px 60px rgba(0, 0, 0, 0.82);
+      max-height: calc(100vh - 32px);
+      overflow-y: auto;
+    }
     }
 
     .modal-card.wide {
@@ -1473,8 +1624,138 @@
     .hidden {
       display: none !important;
     }
+
+    /* Hotkey Badge Indicators */
+    .hotkey-pill {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      font-weight: 800;
+      padding: 1px 5px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      color: #e0f2fe;
+      display: inline-block;
+      margin-left: 4px;
+      vertical-align: middle;
+    }
+
+    .hotkey-pill.hotkey-amber {
+      background: rgba(0, 0, 0, 0.25);
+      border-color: rgba(0, 0, 0, 0.4);
+      color: #0b1120;
+    }
+
+    /* How The Page Works Modal Styling */
+    .how-content {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      font-size: 0.83rem;
+      line-height: 1.5;
+      color: #cbd5e1;
+      text-align: left;
+    }
+
+    .how-step-card {
+      background: rgba(8, 13, 27, 0.78);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .how-step-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .how-step-num {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: var(--cyan-soft);
+      border: 1px solid rgba(34, 211, 238, 0.4);
+      color: #67e8f9;
+    }
+
+    .how-step-title {
+      margin: 0;
+      font-size: 0.88rem;
+      font-weight: 800;
+      color: #ffffff;
+    }
+
+    .how-step-card p {
+      margin: 0;
+    }
+
+    .how-step-card ul {
+      margin: 4px 0 0;
+      padding-left: 18px;
+    }
+
+    .how-step-card li {
+      margin-bottom: 3px;
+    }
+
+    /* Narrow Screen Typography & Key Optimization */
+    @media (max-width: 440px) {
+      .letter-tile {
+        width: 32px;
+        height: 44px;
+        font-size: 1.15rem;
+        border-radius: 8px;
+      }
+
+      .word-tiles-row {
+        gap: 4px;
+      }
+
+      .kb-key {
+        height: 46px;
+      }
+
+      .kb-letter {
+        font-size: 0.84rem;
+      }
+
+      .kb-pts {
+        font-size: 0.54rem;
+      }
+    }
+
+    /* Accessibility: Reduced Motion */
+    @media (prefers-reduced-motion: reduce) {
+
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+
+      .bg-star,
+      .svg-star,
+      .pulse-dot {
+        animation: none !important;
+        opacity: 0.7 !important;
+      }
+
+      .astronaut-idle,
+      .shield-bubble {
+        animation: none !important;
+      }
+    }
   </style>
 </head>
+
 <body>
 
   <!-- LAYER 1: FIXED FULL-VIEWPORT DEEP-SPACE BACKDROP + COSMIC FLYBYS -->
@@ -1488,8 +1769,29 @@
       <div class="header-top-row">
         <div class="brand-group">
           <div class="brand-emblem" aria-hidden="true">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            <svg width="54" height="54" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 0 10px rgba(34, 211, 238, 0.35));">
+              <defs>
+                <radialGradient id="helmetAura" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stop-color="#22d3ee" stop-opacity="0.28" />
+                  <stop offset="100%" stop-color="#22d3ee" stop-opacity="0" />
+                </radialGradient>
+                <linearGradient id="emblemHelmetGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#f8fafc" />
+                  <stop offset="65%" stop-color="#cbd5e1" />
+                  <stop offset="100%" stop-color="#94a3b8" />
+                </linearGradient>
+                <linearGradient id="emblemVisorGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="#0b1329" />
+                  <stop offset="100%" stop-color="#020617" />
+                </linearGradient>
+              </defs>
+              <circle cx="16" cy="16" r="15" fill="url(#helmetAura)" />
+              <circle cx="16" cy="15" r="11.5" fill="url(#emblemHelmetGrad)" stroke="#94a3b8" stroke-width="1.3" />
+              <path d="M 10 24 Q 16 27 22 24" stroke="#64748b" stroke-width="2" stroke-linecap="round" fill="none" />
+              <rect x="8.5" y="9.5" width="15" height="11" rx="5.5" fill="url(#emblemVisorGrad)" stroke="#22d3ee" stroke-width="1.4" />
+              <path d="M 11 12.5 Q 16 10.5 20 13.5" stroke="#7dd3fc" stroke-width="1.4" stroke-linecap="round" fill="none" />
+              <circle cx="4.5" cy="15" r="1.5" fill="#0ea5e9" stroke="#38bdf8" stroke-width="0.5" />
+              <circle cx="27.5" cy="15" r="1.5" fill="#0ea5e9" stroke="#38bdf8" stroke-width="0.5" />
             </svg>
           </div>
           <div>
@@ -1498,7 +1800,7 @@
               <span id="hud-rank-badge" class="pill-badge badge-rank">★ NOVICE</span>
               <span id="hud-mode-badge" class="pill-badge badge-mode">ENDLESS RUN</span>
             </div>
-            <p class="brand-sub">Orbital Tether Survival &bull; Scrabble-Weighted Scoring &bull; 130-Word Tactical Lexicon</p>
+            <p class="brand-sub">By Alfred Stengard</p>
           </div>
         </div>
 
@@ -1523,24 +1825,24 @@
             <div class="stat-label">Best</div>
             <div id="hud-high-score" class="stat-value val-amber">0</div>
           </div>
-
-          <div class="header-controls">
-            <button id="btn-toggle-mode" type="button" class="btn-ghost" title="Switch between Endless Run and Single Round">
-              Switch Mode
-            </button>
-            <button id="btn-mute" type="button" class="btn-ghost" title="Toggle Sound Effects" aria-label="Toggle Sound">
-              <span id="mute-icon">🔊</span>
-            </button>
-          </div>
         </div>
       </div>
 
       <div class="header-bottom-row">
-        <div class="sector-controls">
-          <label for="sector-select" class="sector-label">Category Sector:</label>
-          <select id="sector-select" class="sector-select"></select>
-        </div>
         <div id="deck-counter" class="deck-badge">Deck: 130 Words &bull; Solved: 0/130</div>
+        <div class="header-controls">
+          <button id="btn-restart" type="button" class="btn-ghost" title="Reset Current Run to Word 1"
+            aria-label="Restart Mission">
+            ↺ Reset
+          </button>
+          <button id="btn-how" type="button" class="btn-ghost" title="How the Page Works &amp; Basics"
+            aria-label="How the Page Works">
+            📖 How It Works
+          </button>
+          <button id="btn-mute" type="button" class="btn-ghost" title="Toggle Sound Effects" aria-label="Toggle Sound">
+            <span id="mute-icon">🔊</span>
+          </button>
+        </div>
       </div>
     </header>
 
@@ -1561,7 +1863,8 @@
           </div>
 
           <div class="tether-svg-frame">
-            <svg id="tether-svg" viewBox="0 0 460 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Astronaut Tether Orbital Hazard Visualizer">
+            <svg id="tether-svg" viewBox="0 0 460 220" xmlns="http://www.w3.org/2000/svg" role="img"
+              aria-label="Astronaut Tether Orbital Hazard Visualizer">
               <defs>
                 <clipPath id="svgSpaceClip">
                   <rect x="0" y="0" width="460" height="220" />
@@ -1603,11 +1906,13 @@
 
               <!-- Distant Planet Horizon -->
               <circle cx="395" cy="205" r="108" fill="url(#exoPlanetGlow)" />
-              <path d="M 290 220 A 126 126 0 0 1 460 130 L 460 220 Z" fill="#0b1830" stroke="#1e3a5f" stroke-width="1.6" />
+              <path d="M 290 220 A 126 126 0 0 1 460 130 L 460 220 Z" fill="#0b1830" stroke="#1e3a5f"
+                stroke-width="1.6" />
 
               <!-- Orbital Airlock / Spaceship Bulkhead (Left) -->
               <g id="airlock-bulkhead">
-                <rect x="8" y="22" width="60" height="176" rx="11" fill="url(#bulkheadGrad)" stroke="#64748b" stroke-width="2" />
+                <rect x="8" y="22" width="60" height="176" rx="11" fill="url(#bulkheadGrad)" stroke="#64748b"
+                  stroke-width="2" />
                 <rect x="17" y="34" width="42" height="152" rx="7" fill="#070d1b" stroke="#334155" stroke-width="1.5" />
                 <line x1="22" y1="48" x2="54" y2="48" stroke="#f59e0b" stroke-width="3" stroke-dasharray="6 4" />
                 <line x1="22" y1="172" x2="54" y2="172" stroke="#f59e0b" stroke-width="3" stroke-dasharray="6 4" />
@@ -1629,12 +1934,15 @@
 
                   <!-- Pulsing Cyan Hexagonal + Circular Tether Shield Forcefield -->
                   <g id="svg-shield-bubble" class="shield-bubble hidden">
-                    <circle cx="0" cy="0" r="52" fill="rgba(34, 211, 238, 0.11)" stroke="#22d3ee" stroke-width="1.8" stroke-dasharray="7 4" filter="url(#glowCyan)" />
-                    <polygon points="0,-46 40,-23 40,23 0,46 -40,23 -40,-23" fill="rgba(6, 182, 212, 0.14)" stroke="#67e8f9" stroke-width="2" filter="url(#glowCyan)" />
+                    <circle cx="0" cy="0" r="52" fill="rgba(34, 211, 238, 0.11)" stroke="#22d3ee" stroke-width="1.8"
+                      stroke-dasharray="7 4" filter="url(#glowCyan)" />
+                    <polygon points="0,-46 40,-23 40,23 0,46 -40,23 -40,-23" fill="rgba(6, 182, 212, 0.14)"
+                      stroke="#67e8f9" stroke-width="2" filter="url(#glowCyan)" />
                   </g>
 
                   <!-- Life Support Jetpack -->
-                  <rect x="-25" y="-20" width="15" height="36" rx="4.5" fill="#64748b" stroke="#cbd5e1" stroke-width="1.6" />
+                  <rect x="-25" y="-20" width="15" height="36" rx="4.5" fill="#64748b" stroke="#cbd5e1"
+                    stroke-width="1.6" />
                   <circle cx="-17.5" cy="-11" r="2.6" fill="#22d3ee" />
                   <circle cx="-17.5" cy="8" r="2.6" fill="#f43f5e" />
 
@@ -1643,20 +1951,26 @@
                   <path d="M 6 19 L 15 38 L 23 34 L 13 19 Z" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.5" />
 
                   <!-- Torso Suit -->
-                  <rect x="-14" y="-13" width="28" height="34" rx="9" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.8" />
+                  <rect x="-14" y="-13" width="28" height="34" rx="9" fill="#f8fafc" stroke="#94a3b8"
+                    stroke-width="1.8" />
                   <!-- Chest Telemetry Console -->
-                  <rect x="-8" y="-4" width="16" height="12" rx="3" fill="#0f172a" stroke="#22d3ee" stroke-width="1.1" />
+                  <rect x="-8" y="-4" width="16" height="12" rx="3" fill="#0f172a" stroke="#22d3ee"
+                    stroke-width="1.1" />
                   <circle cx="-3.5" cy="2" r="1.7" fill="#10b981" />
                   <circle cx="3.5" cy="2" r="1.7" fill="#f59e0b" />
 
                   <!-- Arms -->
-                  <path d="M -13 -6 Q -28 4 -21 15" fill="none" stroke="#e2e8f0" stroke-width="6.5" stroke-linecap="round" />
-                  <path d="M 13 -6 Q 28 -15 32 -4" fill="none" stroke="#e2e8f0" stroke-width="6.5" stroke-linecap="round" />
+                  <path d="M -13 -6 Q -28 4 -21 15" fill="none" stroke="#e2e8f0" stroke-width="6.5"
+                    stroke-linecap="round" />
+                  <path d="M 13 -6 Q 28 -15 32 -4" fill="none" stroke="#e2e8f0" stroke-width="6.5"
+                    stroke-linecap="round" />
 
                   <!-- Helmet & Reflective Visor -->
                   <circle cx="0" cy="-26" r="17" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.8" />
-                  <rect x="-10" y="-33" width="22" height="15" rx="7.5" fill="#0b1120" stroke="#38bdf8" stroke-width="1.6" />
-                  <path d="M -5 -30 Q 2 -32 9 -27" fill="none" stroke="#7dd3fc" stroke-width="2.1" stroke-linecap="round" opacity="0.9" />
+                  <rect x="-10" y="-33" width="22" height="15" rx="7.5" fill="#0b1120" stroke="#38bdf8"
+                    stroke-width="1.6" />
+                  <path d="M -5 -30 Q 2 -32 9 -27" fill="none" stroke="#7dd3fc" stroke-width="2.1"
+                    stroke-linecap="round" opacity="0.9" />
                 </g>
               </g>
             </svg>
@@ -1706,10 +2020,13 @@
         <div class="hud-panel perks-panel">
           <div class="panel-header-row" style="margin-bottom:0;">
             <span class="section-eyebrow" style="color:#c084fc;">Active Orbital Perks</span>
-            <span id="perk-progress-note" style="font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted);">Next draft in 3 solves</span>
+            <span id="perk-progress-note"
+              style="font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted);">Next draft in 3
+              solves</span>
           </div>
           <div id="active-perks-list" class="perks-badges-row">
-            <span class="perk-empty-note">No ship modules installed yet. Clear 3 words in Endless Run to draft a perk.</span>
+            <span class="perk-empty-note">No ship modules installed yet. Clear 3 words in Endless Run to draft a
+              perk.</span>
           </div>
         </div>
       </section>
@@ -1737,31 +2054,33 @@
             <div class="charge-track">
               <div id="charge-bar-fill" class="charge-fill" style="width: 33%;"></div>
             </div>
-            <div id="charge-rate-hint" class="charge-hint">+15 Charge per hit &bull; +30 Charge for rare 500-pt letters (K, J, X, Q, Z)</div>
+            <div id="charge-rate-hint" class="charge-hint">+15 Charge per hit &bull; +30 Charge for rare 500-pt letters
+              (K, J, X, Q, Z)</div>
           </div>
 
           <div class="lifelines-grid">
-            <button id="btn-sweep" type="button" class="lifeline-btn">
-              <span class="lifeline-name">🧹 Dead-Letter Sweep</span>
+            <button id="btn-sweep" type="button" class="lifeline-btn" title="Dead-Letter Sweep (Shortcut: Key [1])">
+              <span class="lifeline-name">🧹 Sweep <span class="hotkey-pill">1</span></span>
               <span id="desc-sweep" class="lifeline-desc">Cut 3 wrong letters</span>
               <span id="cost-sweep" class="lifeline-cost">40 ⚡</span>
             </button>
 
-            <button id="btn-vowel" type="button" class="lifeline-btn">
-              <span class="lifeline-name">📡 Vowel Sonar</span>
+            <button id="btn-vowel" type="button" class="lifeline-btn" title="Vowel Sonar (Shortcut: Key [2])">
+              <span class="lifeline-name">📡 Sonar <span class="hotkey-pill">2</span></span>
               <span id="desc-vowel" class="lifeline-desc">Reveal 1 vowel</span>
               <span id="cost-vowel" class="lifeline-cost violet">60 ⚡</span>
             </button>
 
-            <button id="btn-shield" type="button" class="lifeline-btn">
-              <span class="lifeline-name">🛡️ Tether Shield</span>
+            <button id="btn-shield" type="button" class="lifeline-btn" title="Tether Shield (Shortcut: Key [3])">
+              <span class="lifeline-name">🛡️ Shield <span class="hotkey-pill">3</span></span>
               <span id="desc-shield" class="lifeline-desc">Block next miss / gamble</span>
               <span id="cost-shield" class="lifeline-cost emerald">80 ⚡</span>
             </button>
           </div>
 
-          <button id="btn-open-solve" type="button" class="solve-now-btn">
-            <span>🎯 SOLVE NOW GAMBLE</span>
+          <button id="btn-open-solve" type="button" class="solve-now-btn"
+            title="Solve Now Gamble (Shortcut: Press Space or /)">
+            <span>🎯 SOLVE NOW GAMBLE <span class="hotkey-pill hotkey-amber">SPACE</span></span>
             <span class="solve-sub">Risk 2 Tethers (Shieldable) &bull; +1,000 Bonus (&ge;4 Blanks)</span>
           </button>
         </div>
@@ -1769,11 +2088,15 @@
         <!-- SCRABBLE-WEIGHTED QWERTY KEYBOARD -->
         <div class="hud-panel keyboard-panel">
           <div class="keyboard-header">
-            <span class="section-eyebrow" style="color:var(--text-muted);">Tactical Input Console (A–Z Keys Supported)</span>
+            <span class="section-eyebrow" style="color:var(--text-muted);">Tactical Input Console (A–Z Keys
+              Supported)</span>
             <div class="legend-row">
-              <span class="legend-item" style="color:#cbd5e1;"><span class="legend-dot" style="background:#94a3b8;"></span>100 PT</span>
-              <span class="legend-item" style="color:#7dd3fc;"><span class="legend-dot" style="background:#38bdf8;"></span>250 PT</span>
-              <span class="legend-item" style="color:#fbbf24;"><span class="legend-dot" style="background:#f59e0b;"></span>500 PT RARE</span>
+              <span class="legend-item" style="color:#cbd5e1;"><span class="legend-dot"
+                  style="background:#94a3b8;"></span>100 PT</span>
+              <span class="legend-item" style="color:#7dd3fc;"><span class="legend-dot"
+                  style="background:#38bdf8;"></span>250 PT</span>
+              <span class="legend-item" style="color:#fbbf24;"><span class="legend-dot"
+                  style="background:#f59e0b;"></span>500 PT RARE</span>
             </div>
           </div>
           <div id="keyboard-container" class="keyboard-rows"></div>
@@ -1790,12 +2113,16 @@
         <button id="btn-close-solve" type="button" class="modal-close" aria-label="Close">✕</button>
       </div>
       <p class="modal-copy">
-        Transmit the full target word. Solving with <strong style="color:#fbbf24;">4 or more blanks</strong> remaining awards a <strong style="color:#34d399;">+1,000 PTS</strong> Early Solve Bonus plus points for every hidden letter.
+        Transmit the full target word. Solving with <strong style="color:#fbbf24;">4 or more blanks</strong> remaining
+        awards a <strong style="color:#34d399;">+1,000 PTS</strong> Early Solve Bonus plus points for every hidden
+        letter.
         <br /><br />
-        <strong style="color:#fb7185;">Risk:</strong> A wrong word snaps <strong>2 Tethers</strong> (or <strong>0 Tethers</strong> if your Tether Shield is active, consuming the shield).
+        <strong style="color:#fb7185;">Risk:</strong> A wrong word snaps <strong>2 Tethers</strong> (or <strong>0
+          Tethers</strong> if your Tether Shield is active, consuming the shield).
       </p>
       <form id="form-solve-now">
-        <input id="input-solve-word" class="solve-input" type="text" autocomplete="off" spellcheck="false" placeholder="TYPE FULL WORD..." />
+        <input id="input-solve-word" class="solve-input" type="text" autocomplete="off" spellcheck="false"
+          placeholder="TYPE FULL WORD..." />
         <div class="modal-actions">
           <button id="btn-cancel-solve" type="button" class="btn-ghost">Cancel</button>
           <button type="submit" class="btn-amber">Transmit Solution</button>
@@ -1809,7 +2136,8 @@
     <div class="modal-card summary-center">
       <div id="summary-icon" class="summary-icon">🚀</div>
       <h2 id="summary-title" class="modal-title" style="font-size:1.45rem;">SIGNAL DECRYPTED!</h2>
-      <p id="summary-subtitle" style="margin:6px 0 0; font-size:0.82rem; color:var(--text-muted);">Astronaut secured to orbital airlock.</p>
+      <p id="summary-subtitle" style="margin:6px 0 0; font-size:0.82rem; color:var(--text-muted);">Astronaut secured to
+        orbital airlock.</p>
 
       <div class="revealed-word-box">
         <div id="summary-category" class="revealed-cat">CATEGORY</div>
@@ -1846,10 +2174,87 @@
   <!-- MODAL 3: ORBITAL MODULE DRAFT (EVERY 3 SOLVED WORDS IN ENDLESS RUN) -->
   <div id="modal-perk" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="perk-modal-title">
     <div class="modal-card wide summary-center">
-      <span class="pill-badge badge-rank" style="margin-bottom:8px;">Milestone Reached &bull; Orbital Module Draft</span>
+      <span class="pill-badge badge-rank" style="margin-bottom:8px;">Milestone Reached &bull; Orbital Module
+        Draft</span>
       <h2 id="perk-modal-title" class="modal-title" style="font-size:1.4rem;">Install a Ship Module</h2>
-      <p style="margin:6px 0 0; font-size:0.82rem; color:var(--text-muted);">Choose 1 permanent Rogue-lite upgrade for the remainder of this Endless Run.</p>
+      <p style="margin:6px 0 0; font-size:0.82rem; color:var(--text-muted);">Choose 1 permanent Rogue-lite upgrade for
+        the remainder of this Endless Run (Keys 1-3).</p>
       <div id="perk-choices-grid" class="perk-grid"></div>
+    </div>
+  </div>
+
+  <!-- MODAL 4: HOW THE PAGE WORKS -->
+  <div id="modal-how" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="how-modal-title">
+    <div class="modal-card wide">
+      <div class="modal-header">
+        <h2 id="how-modal-title" class="modal-title">📖 How The Page Works</h2>
+        <button id="btn-close-how" type="button" class="modal-close" aria-label="Close How It Works">✕</button>
+      </div>
+      <div class="how-content">
+        <div class="how-step-card">
+          <div class="how-step-header">
+            <span class="how-step-num">Step 1</span>
+            <h3 class="how-step-title">🎯 The Main Goal</h3>
+          </div>
+          <p>A secret word has been intercepted in orbit. Your objective is to guess the missing letters using your
+            keyboard or the on-screen console. Solving the word pulls your spacewalking astronaut safely back toward the
+            station airlock.</p>
+        </div>
+
+        <div class="how-step-card">
+          <div class="how-step-header">
+            <span class="how-step-num">Step 2</span>
+            <h3 class="how-step-title">⚡ Watch Your Tethers (Lives)</h3>
+          </div>
+          <p>You have <strong>6 Energy Tethers</strong> holding the astronaut to the hull. Every incorrect letter guess
+            snaps 1 tether, causing the astronaut to drift farther away into deep space. If all 6 tethers snap, the
+            astronaut is lost and your run ends.</p>
+        </div>
+
+        <div class="how-step-card">
+          <div class="how-step-header">
+            <span class="how-step-num">Step 3</span>
+            <h3 class="how-step-title">💡 Read The Clues</h3>
+          </div>
+          <p>Look at the <strong>Tiered Signal Clues</strong> box on the left:</p>
+          <ul>
+            <li><strong>Tier 1 (Broad):</strong> Always available right from the start of each word.</li>
+            <li><strong>Tier 2 (Medium):</strong> Automatically decrypts if you reach &le;3 remaining tethers.</li>
+            <li><strong>Tier 3 (Critical):</strong> A final specific hint that unlocks when you are down to your last
+              cable.</li>
+          </ul>
+        </div>
+
+        <div class="how-step-card">
+          <div class="how-step-header">
+            <span class="how-step-num">Step 4</span>
+            <h3 class="how-step-title">🔋 Charge &amp; Lifelines (Hotkeys 1, 2, 3)</h3>
+          </div>
+          <p>Correct letter guesses fill your <strong>⚡ Charge Meter</strong> (rare letters like Q, X, Z give bonus
+            charge!). Spend charge on 3 emergency lifelines:</p>
+          <ul>
+            <li><strong>🧹 Sweep (Key [1]):</strong> Removes 3 wrong letters from the keyboard console (Costs 40⚡).</li>
+            <li><strong>📡 Sonar (Key [2]):</strong> Automatically reveals 1 hidden vowel in the word (Costs 60⚡).</li>
+            <li><strong>🛡️ Shield (Key [3]):</strong> Blocks your next mistake with zero tether loss and protects your
+              streak (Costs 80⚡).</li>
+            <li><strong>🎯 Solve Now (Spacebar):</strong> Type the whole word anytime. Solve with 4+ blanks remaining
+              for a <strong>+1,000 PTS</strong> Early Solve Bonus!</li>
+          </ul>
+        </div>
+
+        <div class="how-step-card">
+          <div class="how-step-header">
+            <span class="how-step-num">Step 5</span>
+            <h3 class="how-step-title">🚀 Endless Run &amp; Ship Modules</h3>
+          </div>
+          <p>In this Endless Run mode, every word you clear heals <strong>+2 Tethers</strong>. Every <strong>3 cleared
+              words</strong>, you draft 1 permanent Rogue-lite ship upgrade (such as free Vowel Sonar, 7 max tethers, or
+            auto-revealed starting letters) to help you push your high score!</p>
+        </div>
+      </div>
+      <div class="modal-actions" style="margin-top:16px;">
+        <button id="btn-dismiss-how" type="button" class="btn-primary full">Got It &bull; Let's Play</button>
+      </div>
     </div>
   </div>
 
@@ -1858,164 +2263,22 @@
     <div id="toast-inner" class="toast-inner">Telemetry online.</div>
   </div>
 
+  <!-- TACTICAL WORDS LEXICON (EXTERNAL MODULE) -->
+  <script src="words.js"></script>
+
   <script>
     (function () {
       "use strict";
 
       /* =======================================================================
-         1. 130 UNIQUE CURATED WORDS ACROSS 10 CATEGORIES (390 PROGRESSIVE CLUES)
+         1. 130 UNIQUE CURATED WORDS (INTEGRATED FROM words.js)
          ======================================================================= */
-      const WORD_BANK = [
-        // 1. Space & Cosmos (13)
-        { word: "NEBULA", category: "Space & Cosmos", clues: ["A colossal interstellar cloud in deep space", "Often acts as a stellar nursery where new stars form", "Famous examples include Orion and the Pillars of Creation"] },
-        { word: "QUASAR", category: "Space & Cosmos", clues: ["An extraordinarily luminous cosmic object", "Powered by a supermassive black hole accreting matter", "Short for quasi-stellar radio source"] },
-        { word: "ECLIPSE", category: "Space & Cosmos", clues: ["A dramatic celestial alignment", "Occurs when one astronomical body casts a shadow on another", "Can be solar or lunar, partial or total"] },
-        { word: "ASTEROID", category: "Space & Cosmos", clues: ["A rocky remnant from the early solar system", "Most orbit in a vast belt between Mars and Jupiter", "A giant one ended the age of non-avian dinosaurs"] },
-        { word: "PULSAR", category: "Space & Cosmos", clues: ["A rapidly spinning stellar remnant", "Emits rhythmic beams of radiation like a cosmic lighthouse", "A highly magnetized, rotating neutron star"] },
-        { word: "GRAVITY", category: "Space & Cosmos", clues: ["A fundamental force of the universe", "Keeps planets in orbit and anchors us to the ground", "Described by Newton and Einstein in general relativity"] },
-        { word: "SOLSTICE", category: "Space & Cosmos", clues: ["An astronomical seasonal milestone", "Occurs twice a year when planetary axial tilt reaches an extreme", "Marks the longest day in summer or shortest day in winter"] },
-        { word: "TELESCOPE", category: "Space & Cosmos", clues: ["An essential optical instrument for astronomy", "Uses lenses, mirrors, or dishes to capture distant light", "Hubble and James Webb are famous orbital examples"] },
-        { word: "APHELION", category: "Space & Cosmos", clues: ["A specific point along an elliptical orbit", "The exact opposite of perihelion in planetary motion", "The orbital point where a planet is farthest from the Sun"] },
-        { word: "EXOPLANET", category: "Space & Cosmos", clues: ["A distant world beyond our stellar neighborhood", "Thousands were discovered by the Kepler and TESS missions", "Any planet orbiting a star outside our solar system"] },
-        { word: "SUPERNOVA", category: "Space & Cosmos", clues: ["One of the most energetic events in the cosmos", "Can briefly outshine an entire galaxy and forge heavy elements", "The catastrophic explosive death of a massive star"] },
-        { word: "COSMONAUT", category: "Space & Cosmos", clues: ["A pioneer of orbital spaceflight", "Yuri Gagarin became the first one in 1961", "Russian term for a spacefarer or astronaut"] },
-        { word: "METEORITE", category: "Space & Cosmos", clues: ["An extraterrestrial visitor you can hold in your hand", "Begins as a space rock blazing through the atmosphere", "A meteoroid that survives entry to strike the surface"] },
-
-        // 2. Tech & Cyber (13)
-        { word: "ALGORITHM", category: "Tech & Cyber", clues: ["A foundational concept in computer science", "Powers search engines, recommendation feeds, and GPS routing", "A step-by-step set of rules for solving a computational problem"] },
-        { word: "FIREWALL", category: "Tech & Cyber", clues: ["A cornerstone of network cybersecurity", "Inspects incoming and outgoing data packets against strict rules", "A digital security barrier blocking unauthorized network traffic"] },
-        { word: "ENCRYPT", category: "Tech & Cyber", clues: ["An action vital to modern digital privacy", "Transforms readable plaintext into scrambled ciphertext", "To lock data with a cryptographic key so intruders cannot read it"] },
-        { word: "QUANTUM", category: "Tech & Cyber", clues: ["Cutting-edge frontier of physics and computing", "Relies on qubits, superposition, and entanglement", "Named after the smallest discrete packet of energy"] },
-        { word: "PROTOCOL", category: "Tech & Cyber", clues: ["A formal blueprint for digital communication", "HTTP, TCP, and Bluetooth are widely used examples", "Standardized rules governing how computers exchange data"] },
-        { word: "COMPILER", category: "Tech & Cyber", clues: ["A core software engineering tool", "Validates syntax and optimizes code prior to execution", "Translates human-written source code into machine language"] },
-        { word: "BANDWIDTH", category: "Tech & Cyber", clues: ["A crucial performance metric for internet links", "Higher capacity enables smoother 4K video and fast downloads", "The maximum data transfer rate of a network connection"] },
-        { word: "MAINFRAME", category: "Tech & Cyber", clues: ["Heavy-duty enterprise computing hardware", "Still processes billions of banking and airline transactions", "A massive central computer built for extreme reliability"] },
-        { word: "CYBERNETIC", category: "Tech & Cyber", clues: ["Relating to feedback loops and high-tech augmentation", "Frequently appears in sci-fi bionic limb concepts", "Describing systems that merge biological and electronic control"] },
-        { word: "BLOCKCHAIN", category: "Tech & Cyber", clues: ["A distributed database architecture", "Records transactions transparently without a central authority", "A cryptographically linked chain of immutable data blocks"] },
-        { word: "PIXELATED", category: "Tech & Cyber", clues: ["A recognizable visual artifact in digital imagery", "Appears when a low-resolution graphic is enlarged too much", "Displaying visible blocky square picture elements"] },
-        { word: "DEBUGGING", category: "Tech & Cyber", clues: ["A daily ritual for software engineers", "Involves stack traces, breakpoints, and inspecting logs", "The process of hunting down and fixing defects in code"] },
-        { word: "TELEMETRY", category: "Tech & Cyber", clues: ["Automated remote monitoring technology", "Used heavily in rocket launches and Formula 1 racing", "Collecting and transmitting live sensor data from afar"] },
-
-        // 3. Nature & Wildlife (13)
-        { word: "CHAMELEON", category: "Nature & Wildlife", clues: ["A specialized tree-dwelling reptile", "Has independently rotating eyes and a ballistic tongue", "Famous for shifting skin color to communicate or camouflage"] },
-        { word: "AVALANCHE", category: "Nature & Wildlife", clues: ["A sudden, dramatic alpine hazard", "Often triggered by unstable snowpack layers on steep slopes", "A massive rapid slide of snow and ice down a mountainside"] },
-        { word: "MANGROVE", category: "Nature & Wildlife", clues: ["A resilient tropical coastal ecosystem", "Shields shorelines from storm surges and coastal erosion", "Salt-tolerant trees with tangled stilt roots in tidal waters"] },
-        { word: "PENGUIN", category: "Nature & Wildlife", clues: ["A beloved Southern Hemisphere seabird", "Glides effortlessly underwater using flipper-like wings", "Flightless tuxedo-patterned bird thriving in Antarctica"] },
-        { word: "ALBATROSS", category: "Nature & Wildlife", clues: ["A legendary long-distance ocean wanderer", "Can soar for hours across waves without flapping once", "Seabird boasting the widest wingspan of any living bird"] },
-        { word: "MONSOON", category: "Nature & Wildlife", clues: ["A powerful regional weather cycle", "Critical to agriculture across South and Southeast Asia", "A seasonal reversing wind bringing torrential summer rains"] },
-        { word: "FJORD", category: "Nature & Wildlife", clues: ["A dramatic northern coastal landform", "Carved slowly over millennia by retreating Ice Age glaciers", "A deep, narrow sea inlet flanked by steep cliffs in Norway"] },
-        { word: "PLATYPUS", category: "Nature & Wildlife", clues: ["One of Australia's strangest native animals", "Hunts underwater prey using bill electroreception", "An egg-laying, duck-billed, beaver-tailed mammal"] },
-        { word: "SEQUOIA", category: "Nature & Wildlife", clues: ["A botanical giant of California mountain slopes", "Protected by thick, fire-resistant reddish bark", "Among the largest and oldest redwood trees on Earth"] },
-        { word: "STALACTITE", category: "Nature & Wildlife", clues: ["A mineral formation inside limestone caverns", "Grows slowly from dripping calcium-rich water over centuries", "An icicle-shaped rock hanging tightly from a cave ceiling"] },
-        { word: "ARCHIPELAGO", category: "Nature & Wildlife", clues: ["A geographic pattern found across world oceans", "Indonesia, Japan, and Hawaii are notable examples", "A chain or extensive cluster of islands grouped together"] },
-        { word: "CHLOROPHYLL", category: "Nature & Wildlife", clues: ["A vital biochemical compound inside plants", "Absorbs red and blue sunlight to fuel photosynthesis", "The natural pigment responsible for making foliage green"] },
-        { word: "WOLVERINE", category: "Nature & Wildlife", clues: ["A fierce, solitary northern carnivore", "Shares its name with an iconic comic book mutant", "The largest land-dwelling member of the weasel family"] },
-
-        // 4. Science & Chemistry (13)
-        { word: "CATALYST", category: "Science & Chemistry", clues: ["A key accelerator in chemical reactions", "Lowers the activation energy needed for a process", "A substance that speeds up a reaction without being consumed"] },
-        { word: "ISOTOPE", category: "Science & Chemistry", clues: ["A nuclear variant of a chemical element", "Carbon-14 is a famous radioactive example used in dating", "Atoms with equal protons but a different number of neutrons"] },
-        { word: "MOLECULE", category: "Science & Chemistry", clues: ["A microscopic building block of matter", "Water consists of two hydrogen and one oxygen joined together", "Two or more atoms chemically bonded as a single unit"] },
-        { word: "ELECTRON", category: "Science & Chemistry", clues: ["A fundamental subatomic particle", "Its movement through conductors creates electric current", "A negatively charged particle orbiting an atomic nucleus"] },
-        { word: "ENTROPY", category: "Science & Chemistry", clues: ["A central law in thermodynamics", "Always tends to increase over time in an isolated system", "A scientific measure of randomness or disorder"] },
-        { word: "OSMOSIS", category: "Science & Chemistry", clues: ["A crucial biological transport phenomenon", "Helps plant roots absorb moisture from surrounding soil", "Movement of water molecules across a semipermeable membrane"] },
-        { word: "SPECTRUM", category: "Science & Chemistry", clues: ["A continuous band of scientific wavelengths", "Revealed when white light splits through a glass prism", "The full range of electromagnetic waves or rainbow colors"] },
-        { word: "TITANIUM", category: "Science & Chemistry", clues: ["A prized aerospace and medical metal", "Named after the mighty Titans of Greek mythology", "Lightweight, corrosion-resistant element with atomic number 22"] },
-        { word: "VACCINE", category: "Science & Chemistry", clues: ["A triumph of modern immunology", "Trains white blood cells to recognize future pathogens", "A biological preparation providing acquired immunity to disease"] },
-        { word: "GRAVITON", category: "Science & Chemistry", clues: ["A hypothetical elementary particle", "Bridges quantum mechanics with spacetime curvature", "Theoretical massless boson that mediates gravitational force"] },
-        { word: "SYNAPSE", category: "Science & Chemistry", clues: ["A microscopic junction inside the nervous system", "Relays electrical impulses or chemical neurotransmitters", "The tiny gap where one brain neuron signals another"] },
-        { word: "PHOSPHORUS", category: "Science & Chemistry", clues: ["A highly reactive nonmetallic element", "Essential to DNA backbones and matchbox striker strips", "Chemical element whose Greek name means light-bringer"] },
-        { word: "CENTRIFUGE", category: "Science & Chemistry", clues: ["Standard laboratory separation equipment", "Giant versions also train astronauts for high G-forces", "A high-speed spinning machine that separates fluids by density"] },
-
-        // 5. Myth & History (13)
-        { word: "VALKYRIE", category: "Myth & History", clues: ["A legendary figure from Norse mythology", "Often depicted riding winged steeds across battlefields", "Chooser of the slain who escorts fallen heroes to Valhalla"] },
-        { word: "PHARAOH", category: "Myth & History", clues: ["An ancient Mediterranean title of authority", "Revered as a living intermediary between gods and mortals", "The supreme ruler of ancient Egypt, buried in grand tombs"] },
-        { word: "LABYRINTH", category: "Myth & History", clues: ["A legendary architectural puzzle from Crete", "Designed by the master craftsman Daedalus", "A bewildering maze of twisting corridors built for a monster"] },
-        { word: "OLYMPUS", category: "Myth & History", clues: ["A towering landmark in northern Greece", "Celebrated in epic poetry by Homer and Hesiod", "The sacred mountain home of Zeus and the twelve Greek gods"] },
-        { word: "SPARTAN", category: "Myth & History", clues: ["Associated with rigor, discipline, and austere living", "Fought beside King Leonidas at the Pass of Thermopylae", "An elite warrior citizen of ancient Laconia in Greece"] },
-        { word: "EXCALIBUR", category: "Myth & History", clues: ["A fabled relic of medieval British legend", "Linked to the Lady of the Lake and the court of Camelot", "The mythical sword wielded by King Arthur"] },
-        { word: "MINOTAUR", category: "Myth & History", clues: ["A feared creature of ancient Greek legend", "Ultimately defeated by the Athenian hero Theseus", "A monster with the body of a man and the head of a bull"] },
-        { word: "GLADIATOR", category: "Myth & History", clues: ["A famous figure of ancient Roman spectacle", "Trained in specialized schools for public amphitheaters", "An armed combatant who fought in the Colosseum"] },
-        { word: "SAMURAI", category: "Myth & History", clues: ["An iconic warrior class of feudal Asia", "Guided by the strict honor code known as Bushido", "Armor-clad Japanese swordsman wielding a curved katana"] },
-        { word: "HIEROGLYPH", category: "Myth & History", clues: ["An ancient form of visual language", "Deciphered in the 1820s using the Rosetta Stone", "Pictographic sacred writing carved on Egyptian monuments"] },
-        { word: "RENAISSANCE", category: "Myth & History", clues: ["A pivotal European cultural awakening", "Originated in 14th-century Florence, Italy", "Era of Da Vinci and Michelangelo whose name means rebirth"] },
-        { word: "CATAPULT", category: "Myth & History", clues: ["A classic medieval siege weapon", "Relied on stored torsion or counterweight tension", "A wooden war machine built to hurl boulders over castle walls"] },
-        { word: "PHOENIX", category: "Myth & History", clues: ["A timeless mythological symbol of renewal", "Featured across ancient Egyptian and Greek folklore", "An immortal firebird that rises reborn from its own ashes"] },
-
-        // 6. Cinema & Pop Culture (13)
-        { word: "BLOCKBUSTER", category: "Cinema & Pop Culture", clues: ["A major milestone in box-office entertainment", "Jaws and Star Wars pioneered the summer release format", "A massively budgeted, wildly popular hit movie"] },
-        { word: "SOUNDTRACK", category: "Cinema & Pop Culture", clues: ["An essential emotional layer of film and games", "Composers like John Williams and Hans Zimmer craft iconic ones", "The curated collection of music accompanying a movie"] },
-        { word: "PROTAGONIST", category: "Cinema & Pop Culture", clues: ["A structural pillar of storytelling", "Undergoes the central character arc and faces the antagonist", "The main character or hero driving a narrative forward"] },
-        { word: "CLIFFHANGER", category: "Cinema & Pop Culture", clues: ["A suspenseful narrative technique", "Frequently deployed right before a season finale ends", "An abrupt ending leaving characters in unresolved peril"] },
-        { word: "ANIMATION", category: "Cinema & Pop Culture", clues: ["A versatile visual filmmaking art form", "Spans hand-drawn cels, stop-motion clay, and 3D CGI", "Creating the illusion of motion from sequential frames"] },
-        { word: "DIRECTOR", category: "Cinema & Pop Culture", clues: ["A leading creative authority on a film set", "Guides actors, camera framing, and final editorial vision", "The filmmaker who calls Action and Cut"] },
-        { word: "SCREENPLAY", category: "Cinema & Pop Culture", clues: ["The written blueprint of a motion picture", "Formatted with sluglines, stage directions, and dialogue", "A complete movie script prepared for production"] },
-        { word: "DYSTOPIA", category: "Cinema & Pop Culture", clues: ["A staple setting of speculative fiction", "Explored in classics like 1984, Blade Runner, and The Matrix", "An imagined oppressive society marked by decay or control"] },
-        { word: "FRANCHISE", category: "Cinema & Pop Culture", clues: ["A powerhouse modern entertainment business model", "Expands across sequels, spin-offs, merchandise, and parks", "A multi-installment media series sharing one universe"] },
-        { word: "CAMEO", category: "Cinema & Pop Culture", clues: ["A fun surprise for observant moviegoers", "Stan Lee became famous for making these in superhero films", "A brief, often uncredited guest appearance by a famous face"] },
-        { word: "MONTAGE", category: "Cinema & Pop Culture", clues: ["A classic film editing sequence", "Often paired with upbeat music for a training scene", "Rapidly cut clips compressing weeks of progress into seconds"] },
-        { word: "SPOTLIGHT", category: "Cinema & Pop Culture", clues: ["A staple lighting fixture in theater and live shows", "Symbolizes sudden fame or intense public scrutiny", "A focused, intense beam of light illuminating one performer"] },
-        { word: "TRILOGY", category: "Cinema & Pop Culture", clues: ["A beloved format for epic sagas", "The Lord of the Rings and Back to the Future are iconic examples", "A connected series of exactly three films, books, or games"] },
-
-        // 7. Food & Culinary (13)
-        { word: "CROISSANT", category: "Food & Culinary", clues: ["A prized morning bakery staple", "Crafted by folding cold butter repeatedly into laminated dough", "A flaky, crescent-shaped French pastry"] },
-        { word: "ESPRESSO", category: "Food & Culinary", clues: ["A bold Italian cafe essential", "Forms the base for lattes, macchiatos, and cappuccinos", "Concentrated coffee brewed by forcing hot water under pressure"] },
-        { word: "AVOCADO", category: "Food & Culinary", clues: ["A nutrient-rich tropical fruit", "Prized for its creamy green flesh and single large pit", "Key ingredient mashed on toast or blended into Mexican dip"] },
-        { word: "JALAPENO", category: "Food & Culinary", clues: ["A popular ingredient in Tex-Mex cuisine", "Named after the Mexican city of Xalapa", "A medium-hot green chili pepper often stuffed or pickled"] },
-        { word: "TIRAMISU", category: "Food & Culinary", clues: ["A celebrated Italian restaurant dessert", "Its name translates roughly to pick me up", "Layered mascarpone and cocoa treat with coffee-soaked biscuits"] },
-        { word: "SAFFRON", category: "Food & Culinary", clues: ["The most expensive spice in the world by weight", "Harvested painstakingly by hand from purple crocus flowers", "Crimson threads giving paella and risotto a golden hue"] },
-        { word: "PISTACHIO", category: "Food & Culinary", clues: ["A distinctive Mediterranean snack and gelato flavor", "Its hard beige shell naturally splits open when ripe", "A vibrant pale-green culinary nut in the cashew family"] },
-        { word: "GAZPACHO", category: "Food & Culinary", clues: ["A refreshing dish originating in southern Spain", "Blends ripe tomatoes, cucumbers, peppers, garlic, and olive oil", "A classic Andalusian vegetable soup always served chilled"] },
-        { word: "CARDAMOM", category: "Food & Culinary", clues: ["A fragrant aromatic spice from South Asia", "Key to masala chai, Nordic buns, and rich curries", "Small green or black seed pods prized for citrusy warmth"] },
-        { word: "SOURDOUGH", category: "Food & Culinary", clues: ["An ancient artisan baking tradition", "Relies on a bubbling starter culture rather than store yeast", "Crusty, tangy bread leavened by wild fermentation"] },
-        { word: "GUACAMOLE", category: "Food & Culinary", clues: ["A crowd-favorite party appetizer", "Traditionally ground in a volcanic stone bowl with lime", "Creamy Mexican avocado dip studded with cilantro and onion"] },
-        { word: "PROSCIUTTO", category: "Food & Culinary", clues: ["A prized delicacy of northern Italy", "Parma and San Daniele are its most famous producing regions", "Paper-thin slices of dry-cured Italian ham often served with melon"] },
-        { word: "MERINGUE", category: "Food & Culinary", clues: ["An airy, delicate pastry component", "Used to crown lemon pies or form crisp pavlova shells", "Stiff peaks of whipped egg whites beaten with fine sugar"] },
-
-        // 8. Music & Arts (13)
-        { word: "SYMPHONY", category: "Music & Arts", clues: ["A grand cornerstone of Western classical music", "Typically structured across four contrasting movements", "An extended musical composition written for a full orchestra"] },
-        { word: "SAXOPHONE", category: "Music & Arts", clues: ["A charismatic wind instrument invented in the 1840s", "Despite its brass body, it is classified as a woodwind", "Signature curved-bell single-reed horn of jazz and blues"] },
-        { word: "CRESCENDO", category: "Music & Arts", clues: ["An expressive dynamic marking in sheet music", "Notated visually by a widening angle bracket symbol", "Italian musical term instructing players to grow louder"] },
-        { word: "MOSAIC", category: "Music & Arts", clues: ["A durable decorative art form dating to antiquity", "Adorns Byzantine domes, Roman floors, and Catalan parks", "An image assembled from thousands of tiny colored glass tiles"] },
-        { word: "WATERCOLOR", category: "Music & Arts", clues: ["A luminous fine-art painting medium", "Prized for translucent washes and soft edges on textured paper", "Paint made from pigments suspended in a water-soluble binder"] },
-        { word: "BARITONE", category: "Music & Arts", clues: ["A rich, resonant range in vocal and brass music", "Sits comfortably between a tenor and a bass", "The most common mid-low male singing voice classification"] },
-        { word: "HARMONICA", category: "Music & Arts", clues: ["A compact, pocket-sized musical instrument", "Staple of American folk, country, and Chicago blues", "A free-reed wind instrument played by blowing and drawing air"] },
-        { word: "ORIGAMI", category: "Music & Arts", clues: ["A meditative traditional craft from Japan", "Requires precision, symmetry, and zero glue or scissors", "The delicate art of folding flat paper into cranes and shapes"] },
-        { word: "SCULPTURE", category: "Music & Arts", clues: ["A tactile three-dimensional fine art", "Created by carving marble, casting bronze, or modeling clay", "Michelangelo's David and Rodin's Thinker are famous examples"] },
-        { word: "VIRTUOSO", category: "Music & Arts", clues: ["A title reserved for extraordinary artistic mastery", "Paganini and Franz Liszt epitomized this rare status", "A musician displaying dazzling, unmatched technical brilliance"] },
-        { word: "TEMPO", category: "Music & Arts", clues: ["A fundamental element of musical feel", "Measured accurately in beats per minute with a metronome", "The overall speed or pace at which a musical piece is played"] },
-        { word: "CALLIGRAPHY", category: "Music & Arts", clues: ["An expressive visual craft using ink and nibs", "Revered in East Asian brushwork and illuminated manuscripts", "The fine art of decorative, flowing hand lettering"] },
-        { word: "FRESCO", category: "Music & Arts", clues: ["A monumental Renaissance painting technique", "Used by Michelangelo across the Sistine Chapel ceiling", "Mural painted rapidly onto freshly laid wet lime plaster"] },
-
-        // 9. Adventure & Places (13)
-        { word: "COMPASS", category: "Adventure & Places", clues: ["An indispensable tool for explorers and mariners", "Revolutionized open-ocean navigation in the Age of Discovery", "A magnetized needle instrument that points toward north"] },
-        { word: "EXPEDITION", category: "Adventure & Places", clues: ["An ambitious organized journey into the unknown", "Shackleton's Antarctic voyage is a legendary example", "A long trek mounted for research or geographic discovery"] },
-        { word: "CITADEL", category: "Adventure & Places", clues: ["An imposing historic architectural stronghold", "Built overlooking a city as the ultimate refuge in wartime", "A heavily fortified fortress guarding the heart of an old town"] },
-        { word: "LIGHTHOUSE", category: "Adventure & Places", clues: ["A coastal landmark standing against crashing waves", "Uses rotating Fresnel lenses to sweep miles of dark water", "A tall shoreline beacon tower guiding ships safely past rocks"] },
-        { word: "SAVANNAH", category: "Adventure & Places", clues: ["An iconic sun-drenched biome", "Home to migrating wildebeest, giraffes, and acacia trees", "A vast tropical grassland dotted with widely spaced trees"] },
-        { word: "GLACIER", category: "Adventure & Places", clues: ["A colossal slow-moving force of nature", "Stores a huge share of Earth's freshwater in polar regions", "A dense river of compressed ancient ice creeping down valleys"] },
-        { word: "CANYON", category: "Adventure & Places", clues: ["A breathtaking geological landmark", "Sculpted over millions of years by persistent river erosion", "A deep, steep-walled gorge like Arizona's Grand landmark"] },
-        { word: "OASIS", category: "Adventure & Places", clues: ["A life-saving stop along ancient caravan routes", "Fed by underground aquifers rising near the surface", "A lush, palm-fringed patch of water and greenery in a desert"] },
-        { word: "MONOLITH", category: "Adventure & Places", clues: ["A striking vertical geological or carved formation", "Australia's Uluru and sci-fi's 2001 slab share this name", "A massive single upright block or pillar of solid stone"] },
-        { word: "CATACOMB", category: "Adventure & Places", clues: ["An eerie subterranean labyrinth", "Famous networks stretch beneath both Rome and Paris", "An underground tunnel system of chambers used as ancient tombs"] },
-        { word: "FRONTIER", category: "Adventure & Places", clues: ["The outermost edge of mapped territory", "Star Trek famously called space the final one", "The remote borderland between settled lands and wilderness"] },
-        { word: "OBSERVATORY", category: "Adventure & Places", clues: ["A quiet sanctuary perched atop dark mountain peaks", "Features a rotating dome that opens to the night sky", "A scientific facility built to house giant astronomical telescopes"] },
-        { word: "PENINSULA", category: "Adventure & Places", clues: ["A prominent coastal geographic formation", "Italy, Iberia, Florida, and Korea are prime examples", "A landmass projecting into water and bordered on three sides"] },
-
-        // 10. High-Value Rare Letters (13)
-        { word: "QUARTZ", category: "High-Value Rare Letters", clues: ["One of the most abundant minerals in Earth's crust", "Its precise piezoelectric vibration keeps wristwatches accurate", "A crystalline silicon dioxide gemstone including amethyst"] },
-        { word: "ZEPHYR", category: "High-Value Rare Letters", clues: ["A poetic word for a pleasant weather phenomenon", "Named after the Greek god of the west wind", "A soft, gentle, refreshing breeze"] },
-        { word: "SPHINX", category: "High-Value Rare Letters", clues: ["An enigmatic guardian of antiquity", "Posed a famous riddle to travelers outside Greek Thebes", "Mythical creature with a lion's body and human head near Giza"] },
-        { word: "OXYGEN", category: "High-Value Rare Letters", clues: ["A colorless gas indispensable to complex life", "Makes up roughly twenty-one percent of Earth's atmosphere", "Element number 8 that fuels respiration and combustion"] },
-        { word: "VORTEX", category: "High-Value Rare Letters", clues: ["A dynamic phenomenon in fluid mechanics", "Seen in bathtub drains, whirlpools, and raging tornadoes", "A mass of whirling fluid or air pulling inward around an axis"] },
-        { word: "JUXTAPOSE", category: "High-Value Rare Letters", clues: ["A sharp analytical and artistic verb", "Used by photographers and writers to highlight stark contrast", "To place two contrasting ideas or objects side by side"] },
-        { word: "ZODIAC", category: "High-Value Rare Letters", clues: ["An ancient celestial coordinate belt", "Divided into twelve distinct star signs along the ecliptic", "Astrological circle featuring Aries, Scorpio, and Aquarius"] },
-        { word: "KALEIDOSCOPE", category: "High-Value Rare Letters", clues: ["A mesmerizing optical toy invented in 1816", "Uses angled internal mirrors and tumbling colored glass beads", "A handheld tube producing ever-changing symmetrical patterns"] },
-        { word: "EQUINOX", category: "High-Value Rare Letters", clues: ["A biannual astronomical balancing point", "Happens every March and September as the Sun crosses the equator", "The day when daytime and nighttime are nearly equal worldwide"] },
-        { word: "BLIZZARD", category: "High-Value Rare Letters", clues: ["A dangerous extreme winter weather event", "Brings whiteout visibility and bone-chilling wind gusts", "A severe snowstorm with sustained winds above 35 mph"] },
-        { word: "PARADOX", category: "High-Value Rare Letters", clues: ["A mind-bending puzzle in logic and time travel", "The grandfather scenario is a famous sci-fi example", "A seemingly self-contradictory statement that may still hold truth"] },
-        { word: "JACKPOT", category: "High-Value Rare Letters", clues: ["A thrilling windfall in games of chance", "Originally a poker term before conquering slot machines", "The grand accumulated top prize won all at once"] },
-        { word: "QUIZZICAL", category: "High-Value Rare Letters", clues: ["A distinctive facial expression or inquisitive tone", "Often accompanied by a tilted head and a raised eyebrow", "Showing mild amusement, curiosity, or puzzled questioning"] }
-      ];
+      const WORD_BANK = (typeof window !== "undefined" && Array.isArray(window.WORD_BANK) && window.WORD_BANK.length > 0)
+        ? window.WORD_BANK
+        : [
+            // Fallback emergency word if words.js is unavailable
+            { word: "ASTRONAUT", category: "Space & Cosmos", clues: ["A trained space explorer", "Wears a pressurized suit to survive in orbital vacuum", "Spacewalker relying on umbilical tethers outside the station"] }
+          ];
 
       /* =======================================================================
          2. CONSTANTS: SCRABBLE LETTER VALUES, KEYBOARD LAYOUT, RANKS & PERKS
@@ -2091,7 +2354,7 @@
       class SoundFX {
         constructor() {
           this.ctx = null;
-          this.muted = false;
+          this.muted = loadStoredInt("hangman_plus_muted", 0) === 1;
         }
         init() {
           try {
@@ -2147,6 +2410,11 @@
           this.tone(523, "sine", 0.09, 0.09);
           setTimeout(() => this.tone(659, "sine", 0.09, 0.09), 55);
           setTimeout(() => this.tone(784, "sine", 0.16, 0.11), 110);
+        }
+        solveSuccess() {
+          [440, 554, 659, 880, 1108].forEach((n, i) => {
+            setTimeout(() => this.tone(n, "sine", 0.15, 0.12), i * 65);
+          });
         }
         victory() {
           [523, 659, 784, 1046].forEach((n, i) => {
@@ -2222,10 +2490,10 @@
         hudRoundScore: document.getElementById("hud-round-score"),
         hudTotalScore: document.getElementById("hud-total-score"),
         hudHighScore: document.getElementById("hud-high-score"),
-        btnToggleMode: document.getElementById("btn-toggle-mode"),
+        btnRestart: document.getElementById("btn-restart"),
+        btnHow: document.getElementById("btn-how"),
         btnMute: document.getElementById("btn-mute"),
         muteIcon: document.getElementById("mute-icon"),
-        sectorSelect: document.getElementById("sector-select"),
         deckCounter: document.getElementById("deck-counter"),
 
         // Tether SVG
@@ -2303,6 +2571,10 @@
         modalPerk: document.getElementById("modal-perk"),
         perkChoicesGrid: document.getElementById("perk-choices-grid"),
 
+        modalHow: document.getElementById("modal-how"),
+        btnCloseHow: document.getElementById("btn-close-how"),
+        btnDismissHow: document.getElementById("btn-dismiss-how"),
+
         toastBanner: document.getElementById("toast-banner"),
         toastInner: document.getElementById("toast-inner")
       };
@@ -2363,14 +2635,14 @@
             wrap.className = "cosmic-entity-node";
             wrap.innerHTML =
               '<svg width="150" height="32" viewBox="0 0 150 32" overflow="visible">' +
-                '<defs><linearGradient id="' + palette.gid + '" x1="0%" y1="50%" x2="100%" y2="50%">' +
-                  '<stop offset="0%" stop-color="' + strokeCol + '" stop-opacity="0" />' +
-                  '<stop offset="70%" stop-color="' + strokeCol + '" stop-opacity="0.72" />' +
-                  '<stop offset="100%" stop-color="' + headCol + '" stop-opacity="1" />' +
-                '</linearGradient></defs>' +
-                '<polygon points="0,16 130,13.4 134,16 130,18.6" fill="url(#' + palette.gid + ')" />' +
-                '<polygon points="134,5 136.5,13.5 145,16 136.5,18.5 134,27 131.5,18.5 123,16 131.5,13.5" fill="' + headCol + '" />' +
-                '<circle cx="134" cy="16" r="3" fill="#ffffff" />' +
+              '<defs><linearGradient id="' + palette.gid + '" x1="0%" y1="50%" x2="100%" y2="50%">' +
+              '<stop offset="0%" stop-color="' + strokeCol + '" stop-opacity="0" />' +
+              '<stop offset="70%" stop-color="' + strokeCol + '" stop-opacity="0.72" />' +
+              '<stop offset="100%" stop-color="' + headCol + '" stop-opacity="1" />' +
+              '</linearGradient></defs>' +
+              '<polygon points="0,16 130,13.4 134,16 130,18.6" fill="url(#' + palette.gid + ')" />' +
+              '<polygon points="134,5 136.5,13.5 145,16 136.5,18.5 134,27 131.5,18.5 123,16 131.5,13.5" fill="' + headCol + '" />' +
+              '<circle cx="134" cy="16" r="3" fill="#ffffff" />' +
               "</svg>";
             return wrap;
           }
@@ -2384,8 +2656,8 @@
         function createRocketNode(isSvg) {
           const markup =
             '<g class="rocket-flame">' +
-              '<polygon points="-14,-4.5 -32,0 -14,4.5" fill="#f59e0b" opacity="0.92" />' +
-              '<polygon points="-14,-2.4 -24,0 -14,2.4" fill="#fef08a" />' +
+            '<polygon points="-14,-4.5 -32,0 -14,4.5" fill="#f59e0b" opacity="0.92" />' +
+            '<polygon points="-14,-2.4 -24,0 -14,2.4" fill="#fef08a" />' +
             "</g>" +
             '<polygon points="-10,-6 -18,-13 -6,-8" fill="#f43f5e" />' +
             '<polygon points="-10,6 -18,13 -6,8" fill="#f43f5e" />' +
@@ -2583,6 +2855,7 @@
 
             if (ent.age < 0) {
               ent.node.style.opacity = "0";
+              if (ent.isSvg && ent.node.setAttribute) ent.node.setAttribute("opacity", "0");
               continue;
             }
 
@@ -2746,35 +3019,18 @@
         return WORD_BANK.filter((item) => item.category === catKey);
       }
 
-      function populateSectorDropdown() {
-        const categories = [];
-        WORD_BANK.forEach((item) => {
-          if (categories.indexOf(item.category) === -1) {
-            categories.push(item.category);
-          }
-        });
-
-        el.sectorSelect.innerHTML = "";
-        const optAll = document.createElement("option");
-        optAll.value = "ALL";
-        optAll.textContent = "All Categories (" + WORD_BANK.length + ")";
-        el.sectorSelect.appendChild(optAll);
-
-        categories.forEach((cat) => {
-          const count = WORD_BANK.filter((item) => item.category === cat).length;
-          const opt = document.createElement("option");
-          opt.value = cat;
-          opt.textContent = cat + " (" + count + ")";
-          el.sectorSelect.appendChild(opt);
-        });
-      }
-
       function drawNextWord() {
         const key = state.selectedCategory;
-        if (!state.shuffledQueues[key] || state.shuffledQueues[key].length === 0) {
-          const pool = getCategoryPool(key);
-          const unsolved = pool.filter((item) => !state.sessionSolvedWords.has(item.word));
-          state.shuffledQueues[key] = shuffleArray(unsolved.length > 0 ? unsolved : pool);
+        const pool = getCategoryPool(key);
+        const unsolved = pool.filter((item) => !state.sessionSolvedWords.has(item.word));
+
+        if (unsolved.length === 0) {
+          // All transmissions have been deciphered!
+          pool.forEach((item) => state.sessionSolvedWords.delete(item.word));
+          showToast("🏆 All " + pool.length + " Transmissions Mastered! Reshuffling deck for Cycle 2.", "rgba(16, 185, 129, 0.85)");
+          state.shuffledQueues[key] = shuffleArray(pool);
+        } else if (!state.shuffledQueues[key] || state.shuffledQueues[key].length === 0) {
+          state.shuffledQueues[key] = shuffleArray(unsolved);
         }
 
         const picked = state.shuffledQueues[key].pop();
@@ -2884,12 +3140,7 @@
       }
 
       function startRound() {
-        if (state.mode === "single") {
-          state.maxLives = 6;
-          state.lives = 6;
-          state.charge = 40;
-          state.streakMultiplier = 1.0;
-        } else if (state.lives <= 0) {
+        if (state.lives <= 0) {
           startNewRun();
           return;
         }
@@ -2919,6 +3170,7 @@
           if (letters.length > 0) {
             const freeLetter = letters[Math.floor(Math.random() * letters.length)];
             state.guessedLetters.add(freeLetter);
+            showToast("🛰️ Auto-Decrypt: Initial letter '" + freeLetter + "' revealed!", "rgba(168, 85, 247, 0.8)");
           }
         }
 
@@ -2963,6 +3215,7 @@
       /* =======================================================================
          11. ASTRONAUT TETHER SVG RENDERER
          ======================================================================= */
+      let sparksTimer = null;
       function renderTetherScene(snappedIndices) {
         const lost = state.maxLives - state.lives;
         const driftRatio = lost / Math.max(1, state.maxLives);
@@ -3051,16 +3304,17 @@
               const sy = anchorYs[idx] + 6;
               return (
                 '<g class="spark-burst" filter="url(#glowSpark)">' +
-                  '<circle cx="' + sx + '" cy="' + sy + '" r="6.5" fill="#fef08a" />' +
-                  '<line x1="' + (sx - 16) + '" y1="' + (sy - 11) + '" x2="' + (sx + 16) + '" y2="' + (sy + 11) + '" stroke="#f59e0b" stroke-width="2.4" />' +
-                  '<line x1="' + (sx - 12) + '" y1="' + (sy + 13) + '" x2="' + (sx + 13) + '" y2="' + (sy - 12) + '" stroke="#fde047" stroke-width="2.2" />' +
-                  '<line x1="' + sx + '" y1="' + (sy - 17) + '" x2="' + sx + '" y2="' + (sy + 17) + '" stroke="#fb7185" stroke-width="2.2" />' +
+                '<circle cx="' + sx + '" cy="' + sy + '" r="6.5" fill="#fef08a" />' +
+                '<line x1="' + (sx - 16) + '" y1="' + (sy - 11) + '" x2="' + (sx + 16) + '" y2="' + (sy + 11) + '" stroke="#f59e0b" stroke-width="2.4" />' +
+                '<line x1="' + (sx - 12) + '" y1="' + (sy + 13) + '" x2="' + (sx + 13) + '" y2="' + (sy - 12) + '" stroke="#fde047" stroke-width="2.2" />' +
+                '<line x1="' + sx + '" y1="' + (sy - 17) + '" x2="' + sx + '" y2="' + (sy + 17) + '" stroke="#fb7185" stroke-width="2.2" />' +
                 "</g>"
               );
             })
             .join("");
           el.sparksLayer.innerHTML = sparks;
-          setTimeout(() => {
+          clearTimeout(sparksTimer);
+          sparksTimer = setTimeout(() => {
             el.sparksLayer.innerHTML = "";
           }, 580);
         }
@@ -3175,12 +3429,9 @@
           state.wordsCleared += 1;
           state.sessionSolvedWords.add(state.currentEntry.word);
 
-          let healed = 0;
-          if (state.mode === "endless") {
-            const before = state.lives;
-            state.lives = Math.min(state.maxLives, state.lives + 2);
-            healed = state.lives - before;
-          }
+          const before = state.lives;
+          state.lives = Math.min(state.maxLives, state.lives + 2);
+          const healed = state.lives - before;
 
           renderAll();
           openSummaryModal(true, livesAtSolve, lifeBonus, earlyBonus, healed);
@@ -3245,7 +3496,10 @@
       function openSolveModal() {
         if (state.roundOver) return;
         sfx.click();
+        const targetLen = state.currentEntry.word.length;
         el.inputSolveWord.value = "";
+        el.inputSolveWord.maxLength = targetLen;
+        el.inputSolveWord.placeholder = "ENTER " + targetLen + "-LETTER WORD...";
         el.modalSolve.classList.add("open");
         setTimeout(() => el.inputSolveWord.focus(), 40);
       }
@@ -3264,6 +3518,12 @@
         const target = state.currentEntry.word;
         const blanksLeft = getBlankCount();
         const rect = el.btnOpenSolve.getBoundingClientRect();
+
+        if (guess.length !== target.length) {
+          showToast("⚠️ Target word is " + target.length + " letters! (You entered " + guess.length + ")", "rgba(245, 158, 11, 0.85)");
+          triggerShake(el.modalSolveCard);
+          return;
+        }
 
         if (guess === target) {
           closeSolveModal();
@@ -3285,6 +3545,7 @@
 
           state.roundLetterScore += hiddenPts;
           addScore(hiddenPts);
+          sfx.solveSuccess();
           spawnFloatingPopup("OVERRIDE SUCCESS! +" + hiddenPts.toLocaleString(), rect.left + rect.width / 2, rect.top, "#fbbf24");
           renderAll();
           checkRoundOutcome();
@@ -3300,7 +3561,6 @@
          ======================================================================= */
       function isEligibleForPerkDraft() {
         return (
-          state.mode === "endless" &&
           state.lives > 0 &&
           state.wordsCleared > 0 &&
           state.wordsCleared % 3 === 0 &&
@@ -3324,17 +3584,12 @@
           el.summaryTitle.style.color = "#6ee7b7";
           el.summarySubtitle.textContent = "Astronaut safely pulled back toward the orbital airlock.";
 
-          if (state.mode === "endless") {
-            el.sumHealRow.classList.remove("hidden");
-            el.sumHealText.textContent =
-              healedAmount > 0
-                ? "+" + healedAmount + " Tether" + (healedAmount > 1 ? "s" : "") + " Repaired"
-                : "Tethers at 100% Capacity";
-            el.btnNextRound.textContent = isEligibleForPerkDraft() ? "CLAIM ORBITAL MODULE →" : "NEXT TRANSMISSION →";
-          } else {
-            el.sumHealRow.classList.add("hidden");
-            el.btnNextRound.textContent = "PLAY ANOTHER WORD →";
-          }
+          el.sumHealRow.classList.remove("hidden");
+          el.sumHealText.textContent =
+            healedAmount > 0
+              ? "+" + healedAmount + " Tether" + (healedAmount > 1 ? "s" : "") + " Repaired"
+              : "Tethers at 100% Capacity";
+          el.btnNextRound.textContent = isEligibleForPerkDraft() ? "CLAIM ORBITAL MODULE →" : "NEXT TRANSMISSION →";
         } else {
           el.summaryIcon.textContent = "🛰️";
           el.summaryIcon.className = "summary-icon loss";
@@ -3347,6 +3602,7 @@
         }
 
         el.modalSummary.classList.add("open");
+        setTimeout(() => el.btnNextRound.focus(), 40);
       }
 
       function handleNextRoundAction() {
@@ -3365,17 +3621,17 @@
         const options = shuffleArray(unowned).slice(0, 3);
 
         el.perkChoicesGrid.innerHTML = "";
-        options.forEach((perk) => {
+        options.forEach((perk, idx) => {
           const btn = document.createElement("button");
           btn.type = "button";
           btn.className = "perk-card";
           btn.innerHTML =
             "<div>" +
-              '<div class="perk-card-icon">' + perk.icon + "</div>" +
-              '<div class="perk-card-title">' + perk.title + "</div>" +
-              '<p class="perk-card-desc">' + perk.desc + "</p>" +
+            '<div class="perk-card-icon">' + perk.icon + "</div>" +
+            '<div class="perk-card-title">' + perk.title + "</div>" +
+            '<p class="perk-card-desc">' + perk.desc + "</p>" +
             "</div>" +
-            '<span class="perk-install-tag">Install Module &rarr;</span>';
+            '<span class="perk-install-tag">Install Module [' + (idx + 1) + "] &rarr;</span>";
 
           btn.addEventListener("click", () => {
             state.activePerks.add(perk.id);
@@ -3393,6 +3649,10 @@
         });
 
         el.modalPerk.classList.add("open");
+        setTimeout(() => {
+          const first = el.perkChoicesGrid.querySelector("button");
+          if (first) first.focus();
+        }, 40);
       }
 
       /* =======================================================================
@@ -3401,21 +3661,27 @@
       function renderWordTiles() {
         const word = state.currentEntry.word;
         el.wordTilesContainer.innerHTML = "";
+        el.wordTilesContainer.setAttribute("role", "list");
+        el.wordTilesContainer.setAttribute("aria-label", "Target word, " + word.length + " letters");
 
         for (let i = 0; i < word.length; i++) {
           const ch = word[i];
           const guessed = state.guessedLetters.has(ch);
           const tile = document.createElement("div");
+          tile.setAttribute("role", "listitem");
 
           if (guessed) {
             tile.className = "letter-tile revealed";
             tile.textContent = ch;
+            tile.setAttribute("aria-label", "Letter " + (i + 1) + ": " + ch);
           } else if (state.roundOver && state.lives <= 0) {
             tile.className = "letter-tile missed-reveal";
             tile.textContent = ch;
+            tile.setAttribute("aria-label", "Letter " + (i + 1) + ": " + ch + " (unrevealed)");
           } else {
             tile.className = "letter-tile";
             tile.innerHTML = '<span class="tile-dot"></span>';
+            tile.setAttribute("aria-label", "Letter " + (i + 1) + ": Blank");
           }
           el.wordTilesContainer.appendChild(tile);
         }
@@ -3446,15 +3712,20 @@
 
             const btn = document.createElement("button");
             btn.type = "button";
+            btn.setAttribute("data-key", letter);
             btn.disabled = isGuessed || isEliminated || state.roundOver;
 
             let cls = "kb-key";
+            let statusDesc = "";
             if (isGuessed && inWord) {
               cls += " hit";
+              statusDesc = ", correctly guessed";
             } else if (isGuessed && !inWord) {
               cls += " miss";
+              statusDesc = ", wrong guess";
             } else if (isEliminated) {
               cls += " eliminated";
+              statusDesc = ", swept";
             } else if (pts === 500) {
               cls += " tier-500";
             } else if (pts === 250) {
@@ -3462,6 +3733,7 @@
             }
 
             btn.className = cls;
+            btn.setAttribute("aria-label", letter + " (" + pts + " pts)" + statusDesc);
             btn.innerHTML =
               '<span class="kb-letter">' + letter + "</span>" +
               '<span class="kb-pts">' + pts + "</span>";
@@ -3482,19 +3754,13 @@
         el.hudTotalScore.textContent = state.totalRunScore.toLocaleString();
         el.hudHighScore.textContent = state.highScore.toLocaleString();
 
-        if (state.mode === "endless") {
-          el.modeBadge.textContent = "ENDLESS RUN";
-          el.statClearedBox.classList.remove("hidden");
-          const remainingForDraft = 3 - (state.wordsCleared % 3);
-          el.perkProgressNote.textContent =
-            state.activePerks.size >= PERKS_POOL.length
-              ? "All 6 Modules Installed"
-              : "Next draft in " + remainingForDraft + " solve" + (remainingForDraft === 1 ? "" : "s");
-        } else {
-          el.modeBadge.textContent = "SINGLE ROUND";
-          el.statClearedBox.classList.add("hidden");
-          el.perkProgressNote.textContent = "Perks active in Endless Run";
-        }
+        el.modeBadge.textContent = "ENDLESS RUN";
+        el.statClearedBox.classList.remove("hidden");
+        const remainingForDraft = 3 - (state.wordsCleared % 3);
+        el.perkProgressNote.textContent =
+          state.activePerks.size >= PERKS_POOL.length
+            ? "All 6 Modules Installed"
+            : "Next draft in " + remainingForDraft + " solve" + (remainingForDraft === 1 ? "" : "s");
 
         // Deck Counter
         const pool = getCategoryPool(state.selectedCategory);
@@ -3506,10 +3772,7 @@
         if (state.activePerks.size === 0) {
           const empty = document.createElement("span");
           empty.className = "perk-empty-note";
-          empty.textContent =
-            state.mode === "endless"
-              ? "No ship modules installed yet. Clear 3 words in Endless Run to draft a perk."
-              : "Switch to Endless Run mode to draft passive Rogue-lite ship modules.";
+          empty.textContent = "No ship modules installed yet. Clear 3 words in Endless Run to draft a perk.";
           el.activePerksList.appendChild(empty);
         } else {
           state.activePerks.forEach((perkId) => {
@@ -3564,30 +3827,38 @@
       /* =======================================================================
          16. EVENT LISTENERS & BOOTSTRAP
          ======================================================================= */
-      el.btnToggleMode.addEventListener("click", () => {
-        sfx.click();
-        state.mode = state.mode === "endless" ? "single" : "endless";
-        showToast(
-          state.mode === "endless"
-            ? "Endless Run Active: Tethers & Charge persist + Orbital Perks every 3 solves!"
-            : "Single Round Mode Active: Fresh 6 Tethers & 40 Charge every word.",
-          "rgba(34, 211, 238, 0.75)"
-        );
-        startNewRun();
-      });
-
       el.btnMute.addEventListener("click", () => {
         sfx.muted = !sfx.muted;
+        saveStoredInt("hangman_plus_muted", sfx.muted ? 1 : 0);
         el.muteIcon.textContent = sfx.muted ? "🔇" : "🔊";
         if (!sfx.muted) sfx.click();
       });
 
-      el.sectorSelect.addEventListener("change", (e) => {
+      el.btnRestart.addEventListener("click", () => {
         sfx.click();
-        state.selectedCategory = e.target.value;
-        const name = state.selectedCategory === "ALL" ? "All 10 Sectors (130 Words)" : state.selectedCategory;
-        showToast("📡 Sector switched to: " + name, "rgba(34, 211, 238, 0.75)");
-        startRound();
+        showToast("↺ Mission reset to fresh run.", "rgba(34, 211, 238, 0.75)");
+        startNewRun();
+      });
+
+      el.btnHow.addEventListener("click", () => {
+        sfx.click();
+        el.modalHow.classList.add("open");
+      });
+
+      el.btnCloseHow.addEventListener("click", () => {
+        el.modalHow.classList.remove("open");
+      });
+
+      el.btnDismissHow.addEventListener("click", () => {
+        el.modalHow.classList.remove("open");
+      });
+
+      el.modalHow.addEventListener("click", (e) => {
+        if (e.target === el.modalHow) el.modalHow.classList.remove("open");
+      });
+
+      el.modalSolve.addEventListener("click", (e) => {
+        if (e.target === el.modalSolve) closeSolveModal();
       });
 
       el.btnSweep.addEventListener("click", activateDeadLetterSweep);
@@ -3601,37 +3872,88 @@
 
       el.btnNextRound.addEventListener("click", handleNextRoundAction);
 
-      // Physical Keyboard Input Support
+      // Physical Keyboard Input Support & Tactical Hotkeys
       window.addEventListener("keydown", (e) => {
-        // Ignore while Solve Now modal is open (except Escape)
+        // Handle How The Page Works modal
+        if (el.modalHow.classList.contains("open")) {
+          if (e.key === "Escape") el.modalHow.classList.remove("open");
+          return;
+        }
+
+        // Handle Solve Now modal
         if (el.modalSolve.classList.contains("open")) {
           if (e.key === "Escape") closeSolveModal();
           return;
         }
-        // Ignore if input or select has focus
-        if (document.activeElement && (document.activeElement.tagName === "INPUT" || document.activeElement.tagName === "SELECT")) {
-          return;
-        }
+
+        // Handle Perk Draft modal (Hotkeys 1, 2, 3)
         if (el.modalPerk.classList.contains("open")) {
+          const perkButtons = el.perkChoicesGrid.querySelectorAll("button");
+          if (e.key === "1" && perkButtons[0]) perkButtons[0].click();
+          else if (e.key === "2" && perkButtons[1]) perkButtons[1].click();
+          else if (e.key === "3" && perkButtons[2]) perkButtons[2].click();
           return;
         }
+
+        // Handle Round Summary modal
         if (el.modalSummary.classList.contains("open")) {
-          if (e.key === "Enter") {
+          if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
             handleNextRoundAction();
           }
           return;
         }
+
+        // Ignore if input or select currently has focus
+        if (document.activeElement && (document.activeElement.tagName === "INPUT" || document.activeElement.tagName === "SELECT")) {
+          return;
+        }
+
+        // Tactical Lifeline Shortcuts (1: Sweep, 2: Sonar, 3: Shield)
+        if (e.key === "1") {
+          e.preventDefault();
+          if (!el.btnSweep.disabled) activateDeadLetterSweep();
+          return;
+        }
+        if (e.key === "2") {
+          e.preventDefault();
+          if (!el.btnVowel.disabled) activateVowelSonar();
+          return;
+        }
+        if (e.key === "3") {
+          e.preventDefault();
+          if (!el.btnShield.disabled) activateTetherShield();
+          return;
+        }
+
+        // Solve Now Gamble Shortcut (Spacebar or /)
+        if ((e.key === " " || e.key === "/") && !state.roundOver) {
+          e.preventDefault();
+          openSolveModal();
+          return;
+        }
+
+        // Standard Alphabet Guess
         if (/^[a-zA-Z]$/.test(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey) {
-          handleLetterGuess(e.key.toUpperCase(), null);
+          const letter = e.key.toUpperCase();
+          const btn = el.keyboardContainer.querySelector('[data-key="' + letter + '"]');
+          if (btn) {
+            btn.classList.add("active-key-flash");
+            setTimeout(() => btn.classList.remove("active-key-flash"), 160);
+          }
+          handleLetterGuess(letter, btn);
         }
       });
 
       // Initialize App
-      populateSectorDropdown();
+      el.muteIcon.textContent = sfx.muted ? "🔇" : "🔊";
       CosmicFlybyEngine.init();
       startNewRun();
+      if (!window.WORD_BANK || !Array.isArray(window.WORD_BANK)) {
+        showToast("⚠️ 'words.js' not loaded. Running in fallback mode.", "rgba(244, 63, 94, 0.9)");
+      }
     })();
   </script>
 </body>
+
 </html>
