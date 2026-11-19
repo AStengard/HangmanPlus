@@ -2238,7 +2238,7 @@
             <h3 class="how-step-title">🚀 Endless Run &amp; Ship Modules</h3>
           </div>
           <p>In this Endless Run mode, every word you clear heals <strong>+2 Tethers</strong>. Every <strong>3 cleared
-              words</strong>, you draft 1 permanent Rogue-lite ship upgrade (such as free Vowel Sonar, 7 max tethers, or
+              words</strong>, you draft 1 permanent Rogue-lite ship upgrade (such as 40⚡ Vowel Sonar, 7 max tethers, or
             auto-revealed starting letters) to help you push your high score!</p>
         </div>
       </div>
@@ -2302,11 +2302,11 @@
           desc: "Earn +10 extra Charge on every correct letter guess."
         },
         {
-          id: "free_vowel_sonar",
+          id: "sonar_discount",
           icon: "📡",
-          title: "Free Vowel Sonar",
-          shortLabel: "Sonar 0⚡",
-          desc: "Vowel Sonar costs 0 Charge instead of 60 Charge."
+          title: "Tuned Vowel Sonar",
+          shortLabel: "Sonar 40⚡",
+          desc: "Vowel Sonar costs 40 Charge instead of 60 Charge (-20⚡ discount)."
         },
         {
           id: "reinforced_bulkhead",
@@ -3158,7 +3158,7 @@
       }
 
       function getVowelSonarCost() {
-        return state.activePerks.has("free_vowel_sonar") ? 0 : 60;
+        return state.activePerks.has("sonar_discount") ? 40 : 60;
       }
 
       function getSweepAmount() {
