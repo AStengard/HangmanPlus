@@ -1,0 +1,3637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hangman + | Orbital Tether Survival</title>
+  <style>
+    /* =========================================================================
+       1. DESIGN TOKENS & GLOBAL BASE (100% SELF-CONTAINED, ZERO EXTERNAL CDNS)
+       ========================================================================= */
+    :root {
+      --bg-void: #060a14;
+      --bg-panel: rgba(15, 23, 42, 0.82);
+      --bg-panel-solid: #0f172a;
+      --bg-inset: rgba(8, 13, 27, 0.88);
+      --border-glow: rgba(56, 189, 248, 0.25);
+      --border-subtle: rgba(148, 163, 184, 0.18);
+      --text-main: #e6eefc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --cyan: #22d3ee;
+      --cyan-soft: rgba(34, 211, 238, 0.16);
+      --emerald: #10b981;
+      --emerald-soft: rgba(16, 185, 129, 0.18);
+      --amber: #f59e0b;
+      --amber-soft: rgba(245, 158, 11, 0.18);
+      --crimson: #f43f5e;
+      --crimson-soft: rgba(244, 63, 94, 0.2);
+      --violet: #a855f7;
+      --violet-soft: rgba(168, 85, 247, 0.2);
+      --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      --radius-lg: 18px;
+      --radius-md: 12px;
+      --radius-sm: 8px;
+      --shadow-panel: 0 14px 36px rgba(2, 6, 23, 0.72), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: #060a14;
+      color: #e6eefc;
+      min-height: 100vh;
+      font-family: var(--font-sans);
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    body {
+      position: relative;
+      background-image:
+        radial-gradient(circle at 14% 16%, rgba(34, 211, 238, 0.13) 0%, transparent 42%),
+        radial-gradient(circle at 86% 80%, rgba(168, 85, 247, 0.14) 0%, transparent 44%),
+        radial-gradient(circle at 50% 0%, rgba(14, 165, 233, 0.10) 0%, transparent 52%);
+      background-attachment: fixed;
+      display: flex;
+      flex-direction: column;
+    }
+
+    button, select, input {
+      font-family: inherit;
+      color: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+    }
+
+    /* =========================================================================
+       2. DUAL-LAYER COSMIC BACKDROP (LAYER 1: FULL-VIEWPORT DEEP SPACE)
+       ========================================================================= */
+    #cosmic-backdrop-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .bg-star {
+      position: absolute;
+      border-radius: 50%;
+      background: #e0f2fe;
+      box-shadow: 0 0 6px rgba(186, 230, 253, 0.85);
+      animation: twinkleStar var(--dur, 4s) ease-in-out var(--delay, 0s) infinite alternate;
+    }
+
+    @keyframes twinkleStar {
+      0% { opacity: 0.2; transform: scale(0.85); }
+      100% { opacity: 0.95; transform: scale(1.18); }
+    }
+
+    .cosmic-entity-node {
+      position: absolute;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      will-change: transform, opacity;
+    }
+
+    .exhaust-puff {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+      will-change: transform, opacity;
+    }
+
+    /* =========================================================================
+       3. APP SHELL & GLASSMORPHIC HUD PANELS
+       ========================================================================= */
+    .app-shell {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 14px 16px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      flex: 1;
+    }
+
+    .hud-panel {
+      background: var(--bg-panel);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid var(--border-glow);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-panel);
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    /* =========================================================================
+       4. TOP HUD HEADER BAR
+       ========================================================================= */
+    .hud-header {
+      padding: 14px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .header-top-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-emblem {
+      width: 44px;
+      height: 44px;
+      border-radius: 13px;
+      background: linear-gradient(135deg, #06b6d4 0%, #6366f1 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 22px rgba(34, 211, 238, 0.32);
+      flex-shrink: 0;
+    }
+
+    .brand-title-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .brand-title {
+      margin: 0;
+      font-size: 1.32rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #ffffff;
+    }
+
+    .brand-plus {
+      color: var(--cyan);
+      text-shadow: 0 0 12px rgba(34, 211, 238, 0.65);
+    }
+
+    .pill-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 4px 9px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+
+    .badge-rank {
+      background: var(--violet-soft);
+      color: #d8b4fe;
+      border-color: rgba(168, 85, 247, 0.45);
+    }
+
+    .badge-mode {
+      background: var(--cyan-soft);
+      color: #67e8f9;
+      border-color: rgba(34, 211, 238, 0.4);
+    }
+
+    .brand-sub {
+      margin: 2px 0 0;
+      font-size: 0.74rem;
+      color: var(--text-muted);
+    }
+
+    .stats-strip {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .stat-box {
+      background: var(--bg-inset);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 6px 11px;
+      min-width: 72px;
+      text-align: center;
+    }
+
+    .stat-box.stat-highlight {
+      border-color: rgba(34, 211, 238, 0.42);
+    }
+
+    .stat-box.stat-best {
+      border-color: rgba(245, 158, 11, 0.42);
+    }
+
+    .stat-label {
+      font-size: 0.62rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+    }
+
+    .stat-value {
+      font-family: var(--font-mono);
+      font-size: 0.92rem;
+      font-weight: 800;
+      margin-top: 2px;
+      color: #ffffff;
+    }
+
+    .val-cyan { color: var(--cyan); }
+    .val-emerald { color: #34d399; }
+    .val-amber { color: #fbbf24; }
+    .val-violet { color: #c084fc; }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-ghost {
+      background: rgba(30, 41, 59, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.28);
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: var(--text-main);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background 0.2s ease, border-color 0.2s ease, transform 0.12s ease;
+    }
+
+    .btn-ghost:hover:not(:disabled) {
+      background: rgba(51, 65, 85, 0.95);
+      border-color: rgba(34, 211, 238, 0.6);
+      color: #ffffff;
+    }
+
+    .btn-ghost:active:not(:disabled) {
+      transform: scale(0.96);
+    }
+
+    .header-bottom-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(148, 163, 184, 0.14);
+    }
+
+    .sector-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .sector-label {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-muted);
+    }
+
+    .sector-select {
+      background: #0b1224;
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      border-radius: 9px;
+      padding: 6px 11px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #f8fafc;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .sector-select:focus, .sector-select:hover {
+      border-color: var(--cyan);
+      box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.18);
+    }
+
+    .deck-badge {
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      font-weight: 700;
+      padding: 6px 11px;
+      border-radius: 9px;
+      background: var(--bg-inset);
+      border: 1px solid rgba(34, 211, 238, 0.28);
+      color: #67e8f9;
+    }
+
+    /* =========================================================================
+       5. TWO-COLUMN DESKTOP / STACKED MOBILE WORKSPACE
+       ========================================================================= */
+    .workspace-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      align-items: start;
+    }
+
+    @media (min-width: 960px) {
+      .workspace-grid {
+        grid-template-columns: 5fr 7fr;
+      }
+    }
+
+    .column-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* =========================================================================
+       6. LEFT PANEL: ASTRONAUT TETHER VISUALIZER + TIERED CLUES + PERKS
+       ========================================================================= */
+    .tether-panel {
+      padding: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    @keyframes hullAlertPulse {
+      0%, 100% {
+        border-color: rgba(244, 63, 94, 0.7);
+        box-shadow: 0 0 24px rgba(244, 63, 94, 0.28), inset 0 0 26px rgba(244, 63, 94, 0.15);
+      }
+      50% {
+        border-color: rgba(251, 113, 133, 1);
+        box-shadow: 0 0 40px rgba(244, 63, 94, 0.5), inset 0 0 40px rgba(244, 63, 94, 0.28);
+      }
+    }
+
+    .tether-panel.hull-alert-critical {
+      animation: hullAlertPulse 1.25s ease-in-out infinite;
+    }
+
+    @keyframes victoryAuraPanel {
+      0% {
+        border-color: rgba(16, 185, 129, 0.95);
+        box-shadow: 0 0 38px rgba(16, 185, 129, 0.5), inset 0 0 38px rgba(34, 211, 238, 0.22);
+      }
+      100% {
+        border-color: rgba(52, 211, 153, 0.6);
+        box-shadow: 0 0 22px rgba(16, 185, 129, 0.26), inset 0 0 18px rgba(16, 185, 129, 0.12);
+      }
+    }
+
+    .tether-panel.hull-victory-glow {
+      animation: victoryAuraPanel 1.1s ease-out forwards;
+    }
+
+    .panel-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .section-eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--cyan);
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 10px var(--cyan);
+      animation: dotPulse 1.6s ease-in-out infinite;
+    }
+
+    @keyframes dotPulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.75); }
+    }
+
+    .tether-badge {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(16, 185, 129, 0.45);
+      background: var(--emerald-soft);
+      color: #6ee7b7;
+    }
+
+    .tether-badge.warn {
+      border-color: rgba(245, 158, 11, 0.5);
+      background: var(--amber-soft);
+      color: #fcd34d;
+    }
+
+    .tether-badge.crit {
+      border-color: rgba(244, 63, 94, 0.65);
+      background: var(--crimson-soft);
+      color: #fda4af;
+    }
+
+    .shield-pill {
+      display: none;
+      align-items: center;
+      gap: 5px;
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(34, 211, 238, 0.24);
+      border: 1px solid rgba(103, 232, 249, 0.65);
+      color: #cffafe;
+      box-shadow: 0 0 14px rgba(34, 211, 238, 0.35);
+    }
+
+    .shield-pill.active {
+      display: inline-flex;
+    }
+
+    .tether-svg-frame {
+      width: 100%;
+      border-radius: 14px;
+      background: radial-gradient(circle at 75% 28%, rgba(30, 58, 138, 0.38) 0%, rgba(4, 8, 20, 0.94) 72%);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      overflow: hidden;
+      position: relative;
+    }
+
+    #tether-svg {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 460 / 220;
+    }
+
+    .tether-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 10px;
+      padding-top: 9px;
+      border-top: 1px solid rgba(148, 163, 184, 0.14);
+      font-size: 0.78rem;
+      color: #cbd5e1;
+    }
+
+    .hull-alert-label {
+      display: none;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 800;
+      color: #fb7185;
+      letter-spacing: 0.08em;
+    }
+
+    .hull-alert-label.visible {
+      display: inline-block;
+      animation: dotPulse 0.9s ease-in-out infinite;
+    }
+
+    /* SVG Astronaut Animations */
+    @keyframes floatZeroG {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-6px) rotate(2.5deg); }
+    }
+
+    .astronaut-idle {
+      animation: floatZeroG 4.2s ease-in-out infinite;
+      transform-origin: center;
+    }
+
+    @keyframes driftLost {
+      0% { transform: translate(0px, 0px) rotate(0deg) scale(1); opacity: 1; }
+      100% { transform: translate(185px, -100px) rotate(140deg) scale(0.32); opacity: 0; }
+    }
+
+    .astronaut-lost {
+      animation: driftLost 2.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    @keyframes shieldPulse {
+      0%, 100% { opacity: 0.68; transform: scale(1) rotate(0deg); }
+      50% { opacity: 1; transform: scale(1.05) rotate(8deg); }
+    }
+
+    .shield-bubble {
+      animation: shieldPulse 2.3s ease-in-out infinite;
+      transform-origin: center;
+    }
+
+    @keyframes sparkFlash {
+      0% { opacity: 1; transform: scale(0.45); }
+      45% { opacity: 1; transform: scale(1.3); }
+      100% { opacity: 0; transform: scale(1.85); }
+    }
+
+    .spark-burst {
+      animation: sparkFlash 0.56s ease-out forwards;
+      transform-box: fill-box;
+      transform-origin: center;
+    }
+
+    @keyframes svgTwinkle {
+      0%, 100% { opacity: 0.25; }
+      50% { opacity: 0.95; }
+    }
+
+    .svg-star {
+      animation: svgTwinkle 3.5s ease-in-out infinite;
+    }
+
+    /* Tiered Signal Clues Panel */
+    .clues-panel {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .category-tag {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 4px 9px;
+      border-radius: 7px;
+      background: rgba(99, 102, 241, 0.2);
+      border: 1px solid rgba(129, 140, 248, 0.4);
+      color: #c7d2fe;
+    }
+
+    .clues-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .clue-card {
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      background: rgba(8, 13, 27, 0.65);
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      transition: border-color 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .clue-card.unlocked-t1 {
+      background: rgba(15, 23, 42, 0.94);
+      border-color: rgba(34, 211, 238, 0.45);
+    }
+
+    .clue-card.unlocked-t2 {
+      background: rgba(15, 23, 42, 0.95);
+      border-color: rgba(245, 158, 11, 0.58);
+    }
+
+    .clue-card.unlocked-t3 {
+      background: rgba(30, 14, 24, 0.94);
+      border-color: rgba(244, 63, 94, 0.68);
+    }
+
+    @keyframes clueFlash {
+      0% { box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.75); transform: scale(0.985); }
+      50% { box-shadow: 0 0 24px 3px rgba(34, 211, 238, 0.45); transform: scale(1.015); }
+      100% { box-shadow: 0 0 0 0 rgba(34, 211, 238, 0); transform: scale(1); }
+    }
+
+    .clue-card.just-unlocked {
+      animation: clueFlash 0.72s ease-out;
+    }
+
+    .clue-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .clue-tier-title {
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+    }
+
+    .clue-card.unlocked-t1 .clue-tier-title { color: var(--cyan); }
+    .clue-card.unlocked-t2 .clue-tier-title { color: #fbbf24; }
+    .clue-card.unlocked-t3 .clue-tier-title { color: #fb7185; }
+
+    .clue-status {
+      font-family: var(--font-mono);
+      font-size: 0.64rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 6px;
+      background: rgba(30, 41, 59, 0.9);
+      color: var(--text-muted);
+    }
+
+    .clue-card.unlocked-t1 .clue-status { background: var(--emerald-soft); color: #6ee7b7; }
+    .clue-card.unlocked-t2 .clue-status { background: var(--amber-soft); color: #fcd34d; }
+    .clue-card.unlocked-t3 .clue-status { background: var(--crimson-soft); color: #fda4af; }
+
+    .clue-body {
+      margin: 0;
+      font-size: 0.84rem;
+      line-height: 1.42;
+      color: var(--text-dim);
+      font-style: italic;
+    }
+
+    .clue-card.unlocked-t1 .clue-body,
+    .clue-card.unlocked-t2 .clue-body,
+    .clue-card.unlocked-t3 .clue-body {
+      color: #f1f5f9;
+      font-style: normal;
+      font-weight: 500;
+    }
+
+    /* Active Perks Strip */
+    .perks-panel {
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .perks-badges-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      min-height: 26px;
+      align-items: center;
+    }
+
+    .perk-empty-note {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+    }
+
+    .perk-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 4px 9px;
+      border-radius: 8px;
+      background: rgba(168, 85, 247, 0.2);
+      border: 1px solid rgba(192, 132, 252, 0.45);
+      color: #e9d5ff;
+      cursor: help;
+    }
+
+    /* =========================================================================
+       7. RIGHT PANEL: WORD TILES + CHARGE/LIFELINES + QWERTY KEYBOARD
+       ========================================================================= */
+    .word-board-panel {
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      min-height: 146px;
+    }
+
+    .word-tiles-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      width: 100%;
+    }
+
+    .letter-tile {
+      width: 40px;
+      height: 52px;
+      border-radius: 11px;
+      background: rgba(7, 11, 23, 0.92);
+      border: 1.5px solid rgba(100, 116, 139, 0.55);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: #ffffff;
+      box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.5);
+    }
+
+    @media (min-width: 640px) {
+      .letter-tile {
+        width: 46px;
+        height: 58px;
+        font-size: 1.6rem;
+      }
+    }
+
+    .tile-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(71, 85, 105, 0.7);
+    }
+
+    @keyframes tileFlipReveal {
+      0% { transform: perspective(400px) rotateX(85deg) scale(0.75); opacity: 0.25; }
+      60% { transform: perspective(400px) rotateX(-12deg) scale(1.09); opacity: 1; }
+      100% { transform: perspective(400px) rotateX(0deg) scale(1); opacity: 1; }
+    }
+
+    .letter-tile.revealed {
+      background: linear-gradient(180deg, rgba(22, 42, 74, 0.96) 0%, rgba(12, 24, 46, 0.98) 100%);
+      border-color: var(--cyan);
+      box-shadow: 0 0 18px rgba(34, 211, 238, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+      animation: tileFlipReveal 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+
+    .letter-tile.missed-reveal {
+      background: rgba(69, 15, 30, 0.85);
+      border-color: var(--crimson);
+      color: #fda4af;
+    }
+
+    .word-meta-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .early-bonus-on {
+      color: #fbbf24;
+      font-weight: 700;
+    }
+
+    /* Charge & Lifelines Panel */
+    .tactical-panel {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .charge-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .charge-title {
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: #67e8f9;
+    }
+
+    .charge-num {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      font-weight: 800;
+      color: #ffffff;
+    }
+
+    .charge-track {
+      width: 100%;
+      height: 13px;
+      border-radius: 999px;
+      background: rgba(7, 11, 23, 0.95);
+      border: 1px solid rgba(100, 116, 139, 0.45);
+      padding: 2px;
+      overflow: hidden;
+    }
+
+    .charge-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #06b6d4 0%, #38bdf8 52%, #a855f7 100%);
+      box-shadow: 0 0 12px rgba(34, 211, 238, 0.55);
+      transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .charge-hint {
+      margin-top: 5px;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+
+    .lifelines-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    @media (max-width: 480px) {
+      .lifelines-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .lifeline-btn {
+      background: rgba(20, 31, 56, 0.92);
+      border: 1px solid rgba(100, 116, 139, 0.42);
+      border-radius: 12px;
+      padding: 10px 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      text-align: center;
+      transition: transform 0.14s ease, border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .lifeline-btn:hover:not(:disabled) {
+      background: rgba(30, 46, 80, 0.96);
+      border-color: var(--cyan);
+      box-shadow: 0 0 16px rgba(34, 211, 238, 0.22);
+      transform: translateY(-1px);
+    }
+
+    .lifeline-btn:active:not(:disabled) {
+      transform: scale(0.97);
+    }
+
+    .lifeline-btn:disabled {
+      opacity: 0.42;
+      filter: grayscale(0.3);
+    }
+
+    .lifeline-name {
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: #f8fafc;
+    }
+
+    .lifeline-desc {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      line-height: 1.25;
+    }
+
+    .lifeline-cost {
+      margin-top: 2px;
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--cyan-soft);
+      border: 1px solid rgba(34, 211, 238, 0.35);
+      color: #67e8f9;
+    }
+
+    .lifeline-cost.violet {
+      background: var(--violet-soft);
+      border-color: rgba(168, 85, 247, 0.4);
+      color: #e9d5ff;
+    }
+
+    .lifeline-cost.emerald {
+      background: var(--emerald-soft);
+      border-color: rgba(16, 185, 129, 0.4);
+      color: #6ee7b7;
+    }
+
+    .solve-now-btn {
+      width: 100%;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 16px;
+      background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+      color: #0b1120;
+      font-weight: 900;
+      font-size: 0.86rem;
+      letter-spacing: 0.04em;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 8px 22px rgba(245, 158, 11, 0.28);
+      transition: transform 0.14s ease, filter 0.2s ease;
+    }
+
+    .solve-now-btn:hover:not(:disabled) {
+      filter: brightness(1.09);
+      transform: translateY(-1px);
+    }
+
+    .solve-now-btn:active:not(:disabled) {
+      transform: scale(0.98);
+    }
+
+    .solve-now-btn:disabled {
+      opacity: 0.42;
+    }
+
+    .solve-sub {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 800;
+      background: rgba(11, 17, 32, 0.18);
+      padding: 3px 8px;
+      border-radius: 999px;
+    }
+
+    /* Keyboard Console Panel */
+    .keyboard-panel {
+      padding: 14px 12px 16px;
+    }
+
+    .keyboard-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+      padding: 0 4px;
+    }
+
+    .legend-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--font-mono);
+      font-size: 0.67rem;
+      font-weight: 700;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .keyboard-rows {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      user-select: none;
+    }
+
+    .kb-row {
+      display: flex;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    .kb-key {
+      flex: 1 1 0;
+      max-width: 54px;
+      height: 52px;
+      border-radius: 10px;
+      background: rgba(25, 37, 64, 0.94);
+      border: 1.5px solid rgba(100, 116, 139, 0.48);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      padding: 2px;
+      font-family: var(--font-mono);
+      transition: transform 0.1s ease, background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .kb-key:hover:not(:disabled) {
+      background: rgba(41, 59, 98, 0.98);
+      border-color: var(--cyan);
+      box-shadow: 0 0 12px rgba(34, 211, 238, 0.25);
+      transform: translateY(-1px);
+    }
+
+    .kb-key:active:not(:disabled) {
+      transform: scale(0.94);
+    }
+
+    .kb-key.tier-250 {
+      border-color: rgba(56, 189, 248, 0.45);
+    }
+
+    .kb-key.tier-500 {
+      border-color: rgba(245, 158, 11, 0.55);
+      background: rgba(45, 32, 18, 0.84);
+    }
+
+    .kb-key.tier-500:hover:not(:disabled) {
+      border-color: #fbbf24;
+      background: rgba(74, 48, 20, 0.92);
+      box-shadow: 0 0 14px rgba(245, 158, 11, 0.35);
+    }
+
+    .kb-key.hit {
+      background: rgba(16, 185, 129, 0.24);
+      border-color: #34d399;
+      color: #a7f3d0;
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.25);
+    }
+
+    .kb-key.miss {
+      background: rgba(69, 15, 30, 0.5);
+      border-color: rgba(244, 63, 94, 0.35);
+      color: rgba(251, 113, 133, 0.5);
+      text-decoration: line-through;
+    }
+
+    .kb-key.eliminated {
+      background: rgba(9, 13, 25, 0.65);
+      border-color: rgba(51, 65, 85, 0.35);
+      color: #475569;
+      opacity: 0.42;
+    }
+
+    .kb-letter {
+      font-size: 0.98rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .kb-pts {
+      font-size: 0.62rem;
+      font-weight: 700;
+      line-height: 1;
+      color: var(--text-muted);
+    }
+
+    .kb-key.tier-250 .kb-pts { color: #7dd3fc; }
+    .kb-key.tier-500 .kb-pts { color: #fbbf24; }
+    .kb-key.hit .kb-pts { color: #6ee7b7; }
+    .kb-key.miss .kb-pts { color: rgba(251, 113, 133, 0.45); }
+
+    /* =========================================================================
+       8. IMPACT SHAKE, FLOATING SCORE POPUPS, TOASTS & MODALS
+       ========================================================================= */
+    @keyframes hullShake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-7px) rotate(-0.35deg); }
+      40% { transform: translateX(7px) rotate(0.35deg); }
+      60% { transform: translateX(-5px); }
+      80% { transform: translateX(5px); }
+    }
+
+    .shake-impact {
+      animation: hullShake 0.36s ease-in-out;
+    }
+
+    @keyframes scoreFloatUp {
+      0% { opacity: 0; transform: translate(-50%, 6px) scale(0.84); }
+      20% { opacity: 1; transform: translate(-50%, -12px) scale(1.08); }
+      100% { opacity: 0; transform: translate(-50%, -56px) scale(0.95); }
+    }
+
+    .score-popup {
+      position: fixed;
+      z-index: 90;
+      pointer-events: none;
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      font-weight: 900;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(6, 10, 20, 0.92);
+      border: 1px solid currentColor;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.65);
+      white-space: nowrap;
+      animation: scoreFloatUp 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .toast-banner {
+      position: fixed;
+      left: 50%;
+      bottom: 20px;
+      transform: translate(-50%, 16px);
+      z-index: 80;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      max-width: calc(100vw - 28px);
+    }
+
+    .toast-banner.show {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+    .toast-inner {
+      padding: 10px 16px;
+      border-radius: 12px;
+      background: rgba(10, 17, 34, 0.96);
+      border: 1px solid rgba(34, 211, 238, 0.55);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.72);
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #f8fafc;
+      text-align: center;
+    }
+
+    /* Modals */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 70;
+      background: rgba(3, 7, 18, 0.82);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal-card {
+      width: 100%;
+      max-width: 460px;
+      padding: 24px;
+      background: rgba(12, 20, 38, 0.96);
+      border: 1px solid rgba(56, 189, 248, 0.42);
+      border-radius: 20px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.82);
+    }
+
+    .modal-card.wide {
+      max-width: 650px;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .modal-title {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #ffffff;
+    }
+
+    .modal-close {
+      background: rgba(30, 41, 59, 0.85);
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      border-radius: 8px;
+      width: 32px;
+      height: 32px;
+      color: #cbd5e1;
+      font-weight: 700;
+    }
+
+    .modal-close:hover {
+      background: rgba(51, 65, 85, 0.95);
+      color: #ffffff;
+    }
+
+    .modal-copy {
+      margin: 0 0 16px;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      color: #cbd5e1;
+    }
+
+    .solve-input {
+      width: 100%;
+      padding: 13px 16px;
+      border-radius: 12px;
+      background: #060b18;
+      border: 1.5px solid rgba(100, 116, 139, 0.65);
+      font-family: var(--font-mono);
+      font-size: 1.1rem;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #ffffff;
+      outline: none;
+      margin-bottom: 14px;
+    }
+
+    .solve-input:focus {
+      border-color: var(--amber);
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.22);
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .btn-primary {
+      border: none;
+      border-radius: 12px;
+      padding: 12px 18px;
+      background: linear-gradient(135deg, #06b6d4 0%, #6366f1 100%);
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 0.86rem;
+      letter-spacing: 0.04em;
+      box-shadow: 0 8px 22px rgba(34, 211, 238, 0.28);
+      transition: filter 0.2s ease, transform 0.12s ease;
+    }
+
+    .btn-primary:hover {
+      filter: brightness(1.1);
+    }
+
+    .btn-primary:active {
+      transform: scale(0.98);
+    }
+
+    .btn-primary.full {
+      width: 100%;
+    }
+
+    .btn-amber {
+      border: none;
+      border-radius: 12px;
+      padding: 11px 18px;
+      background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+      color: #0b1120;
+      font-weight: 900;
+      font-size: 0.82rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .summary-center {
+      text-align: center;
+    }
+
+    .summary-icon {
+      width: 58px;
+      height: 58px;
+      margin: 0 auto 12px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      background: var(--emerald-soft);
+      border: 1px solid rgba(16, 185, 129, 0.45);
+    }
+
+    .summary-icon.loss {
+      background: var(--crimson-soft);
+      border-color: rgba(244, 63, 94, 0.5);
+    }
+
+    .revealed-word-box {
+      margin: 14px 0;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: rgba(6, 10, 20, 0.92);
+      border: 1px solid rgba(56, 189, 248, 0.28);
+    }
+
+    .revealed-cat {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .revealed-word {
+      font-family: var(--font-mono);
+      font-size: 1.38rem;
+      font-weight: 900;
+      letter-spacing: 0.16em;
+      color: var(--cyan);
+      margin-top: 4px;
+    }
+
+    .breakdown-table {
+      background: rgba(6, 10, 20, 0.8);
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 0.84rem;
+    }
+
+    .breakdown-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #cbd5e1;
+    }
+
+    .breakdown-row.divider {
+      padding-top: 8px;
+      border-top: 1px solid rgba(148, 163, 184, 0.18);
+    }
+
+    .breakdown-row.total {
+      font-size: 1rem;
+      font-weight: 800;
+      color: #ffffff;
+    }
+
+    .mono-bold {
+      font-family: var(--font-mono);
+      font-weight: 800;
+    }
+
+    .perk-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    @media (min-width: 640px) {
+      .perk-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    .perk-card {
+      background: rgba(15, 23, 42, 0.94);
+      border: 1.5px solid rgba(168, 85, 247, 0.35);
+      border-radius: 14px;
+      padding: 16px;
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 10px;
+      transition: transform 0.16s ease, border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .perk-card:hover {
+      background: rgba(34, 21, 58, 0.95);
+      border-color: #c084fc;
+      box-shadow: 0 0 22px rgba(168, 85, 247, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .perk-card-icon {
+      font-size: 1.65rem;
+      margin-bottom: 4px;
+    }
+
+    .perk-card-title {
+      font-size: 0.94rem;
+      font-weight: 800;
+      color: #ffffff;
+    }
+
+    .perk-card-desc {
+      margin: 4px 0 0;
+      font-size: 0.78rem;
+      line-height: 1.45;
+      color: #cbd5e1;
+    }
+
+    .perk-install-tag {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: #d8b4fe;
+      letter-spacing: 0.06em;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- LAYER 1: FIXED FULL-VIEWPORT DEEP-SPACE BACKDROP + COSMIC FLYBYS -->
+  <div id="cosmic-backdrop-layer" aria-hidden="true"></div>
+
+  <!-- MAIN APPLICATION SHELL (ABOVE BACKDROP) -->
+  <div class="app-shell">
+
+    <!-- TOP HUD HEADER BAR -->
+    <header class="hud-panel hud-header">
+      <div class="header-top-row">
+        <div class="brand-group">
+          <div class="brand-emblem" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+          </div>
+          <div>
+            <div class="brand-title-row">
+              <h1 class="brand-title">HANGMAN <span class="brand-plus">+</span></h1>
+              <span id="hud-rank-badge" class="pill-badge badge-rank">★ NOVICE</span>
+              <span id="hud-mode-badge" class="pill-badge badge-mode">ENDLESS RUN</span>
+            </div>
+            <p class="brand-sub">Orbital Tether Survival &bull; Scrabble-Weighted Scoring &bull; 130-Word Tactical Lexicon</p>
+          </div>
+        </div>
+
+        <div class="stats-strip">
+          <div id="stat-cleared-box" class="stat-box">
+            <div class="stat-label">Cleared</div>
+            <div id="hud-cleared" class="stat-value val-violet">0</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Streak</div>
+            <div id="hud-streak" class="stat-value val-amber">1.00x</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Round</div>
+            <div id="hud-round-score" class="stat-value val-emerald">0</div>
+          </div>
+          <div class="stat-box stat-highlight">
+            <div class="stat-label">Score</div>
+            <div id="hud-total-score" class="stat-value val-cyan">0</div>
+          </div>
+          <div class="stat-box stat-best">
+            <div class="stat-label">Best</div>
+            <div id="hud-high-score" class="stat-value val-amber">0</div>
+          </div>
+
+          <div class="header-controls">
+            <button id="btn-toggle-mode" type="button" class="btn-ghost" title="Switch between Endless Run and Single Round">
+              Switch Mode
+            </button>
+            <button id="btn-mute" type="button" class="btn-ghost" title="Toggle Sound Effects" aria-label="Toggle Sound">
+              <span id="mute-icon">🔊</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="header-bottom-row">
+        <div class="sector-controls">
+          <label for="sector-select" class="sector-label">Category Sector:</label>
+          <select id="sector-select" class="sector-select"></select>
+        </div>
+        <div id="deck-counter" class="deck-badge">Deck: 130 Words &bull; Solved: 0/130</div>
+      </div>
+    </header>
+
+    <!-- BALANCED TWO-COLUMN WORKSPACE -->
+    <main id="game-arena" class="workspace-grid">
+
+      <!-- LEFT COLUMN: ASTRONAUT TETHER + TIERED CLUES + ACTIVE PERKS -->
+      <section class="column-stack">
+
+        <!-- ASTRONAUT TETHER SVG VISUALIZER -->
+        <div id="tether-panel" class="hud-panel tether-panel">
+          <div class="panel-header-row">
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+              <span class="section-eyebrow"><span class="pulse-dot"></span>Tether Integrity</span>
+              <span id="lives-badge" class="tether-badge">6 / 6 CABLES</span>
+            </div>
+            <span id="shield-pill" class="shield-pill">🛡️ SHIELD ACTIVE</span>
+          </div>
+
+          <div class="tether-svg-frame">
+            <svg id="tether-svg" viewBox="0 0 460 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Astronaut Tether Orbital Hazard Visualizer">
+              <defs>
+                <clipPath id="svgSpaceClip">
+                  <rect x="0" y="0" width="460" height="220" />
+                </clipPath>
+                <radialGradient id="exoPlanetGlow" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stop-color="#0ea5e9" stop-opacity="0.38" />
+                  <stop offset="100%" stop-color="#0ea5e9" stop-opacity="0" />
+                </radialGradient>
+                <radialGradient id="victoryAuraGrad" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stop-color="#10b981" stop-opacity="0.52" />
+                  <stop offset="65%" stop-color="#22d3ee" stop-opacity="0.18" />
+                  <stop offset="100%" stop-color="#10b981" stop-opacity="0" />
+                </radialGradient>
+                <linearGradient id="bulkheadGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#475569" />
+                  <stop offset="100%" stop-color="#0f172a" />
+                </linearGradient>
+                <filter id="glowCyan" x="-30%" y="-30%" width="160%" height="160%">
+                  <feGaussianBlur stdDeviation="2.6" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+                <filter id="glowSpark" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="3.4" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+
+              <!-- Subtle Twinkling Starfield inside SVG -->
+              <g id="svg-starfield-layer" clip-path="url(#svgSpaceClip)"></g>
+
+              <!-- LAYER 2: Clipped Miniature Cosmic Flybys strictly BEHIND airlock, cables & astronaut -->
+              <g id="svg-cosmic-flyby-layer" clip-path="url(#svgSpaceClip)"></g>
+
+              <!-- Distant Planet Horizon -->
+              <circle cx="395" cy="205" r="108" fill="url(#exoPlanetGlow)" />
+              <path d="M 290 220 A 126 126 0 0 1 460 130 L 460 220 Z" fill="#0b1830" stroke="#1e3a5f" stroke-width="1.6" />
+
+              <!-- Orbital Airlock / Spaceship Bulkhead (Left) -->
+              <g id="airlock-bulkhead">
+                <rect x="8" y="22" width="60" height="176" rx="11" fill="url(#bulkheadGrad)" stroke="#64748b" stroke-width="2" />
+                <rect x="17" y="34" width="42" height="152" rx="7" fill="#070d1b" stroke="#334155" stroke-width="1.5" />
+                <line x1="22" y1="48" x2="54" y2="48" stroke="#f59e0b" stroke-width="3" stroke-dasharray="6 4" />
+                <line x1="22" y1="172" x2="54" y2="172" stroke="#f59e0b" stroke-width="3" stroke-dasharray="6 4" />
+                <circle id="station-beacon" cx="38" cy="110" r="7.5" fill="#10b981" filter="url(#glowCyan)" />
+                <g id="station-anchors-layer"></g>
+              </g>
+
+              <!-- Glowing Energy Tether Cables Layer -->
+              <g id="tether-cables-layer"></g>
+
+              <!-- Cable-Snap Spark Particles Layer -->
+              <g id="sparks-layer"></g>
+
+              <!-- Stylized Spacesuit Astronaut (Drifts rightward as tethers snap) -->
+              <g id="astronaut-wrapper" transform="translate(156, 110)">
+                <g id="astronaut-body" class="astronaut-idle">
+                  <!-- Emerald Victory Aura -->
+                  <circle id="svg-victory-aura" cx="0" cy="0" r="64" fill="url(#victoryAuraGrad)" class="hidden" />
+
+                  <!-- Pulsing Cyan Hexagonal + Circular Tether Shield Forcefield -->
+                  <g id="svg-shield-bubble" class="shield-bubble hidden">
+                    <circle cx="0" cy="0" r="52" fill="rgba(34, 211, 238, 0.11)" stroke="#22d3ee" stroke-width="1.8" stroke-dasharray="7 4" filter="url(#glowCyan)" />
+                    <polygon points="0,-46 40,-23 40,23 0,46 -40,23 -40,-23" fill="rgba(6, 182, 212, 0.14)" stroke="#67e8f9" stroke-width="2" filter="url(#glowCyan)" />
+                  </g>
+
+                  <!-- Life Support Jetpack -->
+                  <rect x="-25" y="-20" width="15" height="36" rx="4.5" fill="#64748b" stroke="#cbd5e1" stroke-width="1.6" />
+                  <circle cx="-17.5" cy="-11" r="2.6" fill="#22d3ee" />
+                  <circle cx="-17.5" cy="8" r="2.6" fill="#f43f5e" />
+
+                  <!-- Legs -->
+                  <path d="M -6 19 L -13 39 L -4 41 L 2 21 Z" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.5" />
+                  <path d="M 6 19 L 15 38 L 23 34 L 13 19 Z" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.5" />
+
+                  <!-- Torso Suit -->
+                  <rect x="-14" y="-13" width="28" height="34" rx="9" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.8" />
+                  <!-- Chest Telemetry Console -->
+                  <rect x="-8" y="-4" width="16" height="12" rx="3" fill="#0f172a" stroke="#22d3ee" stroke-width="1.1" />
+                  <circle cx="-3.5" cy="2" r="1.7" fill="#10b981" />
+                  <circle cx="3.5" cy="2" r="1.7" fill="#f59e0b" />
+
+                  <!-- Arms -->
+                  <path d="M -13 -6 Q -28 4 -21 15" fill="none" stroke="#e2e8f0" stroke-width="6.5" stroke-linecap="round" />
+                  <path d="M 13 -6 Q 28 -15 32 -4" fill="none" stroke="#e2e8f0" stroke-width="6.5" stroke-linecap="round" />
+
+                  <!-- Helmet & Reflective Visor -->
+                  <circle cx="0" cy="-26" r="17" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.8" />
+                  <rect x="-10" y="-33" width="22" height="15" rx="7.5" fill="#0b1120" stroke="#38bdf8" stroke-width="1.6" />
+                  <path d="M -5 -30 Q 2 -32 9 -27" fill="none" stroke="#7dd3fc" stroke-width="2.1" stroke-linecap="round" opacity="0.9" />
+                </g>
+              </g>
+            </svg>
+          </div>
+
+          <div class="tether-footer">
+            <span id="hazard-status-text">All energy tethers nominal. Ready for signal decryption.</span>
+            <span id="hull-alert-label" class="hull-alert-label">⚠ HULL ALERT</span>
+          </div>
+        </div>
+
+        <!-- TIERED SIGNAL CLUES PANEL -->
+        <div class="hud-panel clues-panel">
+          <div class="panel-header-row" style="margin-bottom:2px;">
+            <span class="section-eyebrow"><span class="pulse-dot"></span>Tiered Signal Clues</span>
+            <span id="clue-category-tag" class="category-tag">SECTOR</span>
+          </div>
+
+          <div class="clues-list">
+            <div id="clue-card-1" class="clue-card unlocked-t1">
+              <div class="clue-meta">
+                <span class="clue-tier-title">Tier 1 &bull; Broad</span>
+                <span class="clue-status">ONLINE</span>
+              </div>
+              <p id="clue-text-1" class="clue-body">Initializing orbital signal...</p>
+            </div>
+
+            <div id="clue-card-2" class="clue-card">
+              <div class="clue-meta">
+                <span class="clue-tier-title">Tier 2 &bull; Medium</span>
+                <span id="clue-status-2" class="clue-status">🔒 &le;3 Tethers</span>
+              </div>
+              <p id="clue-text-2" class="clue-body">Auto-decrypts at &le;3 remaining tethers</p>
+            </div>
+
+            <div id="clue-card-3" class="clue-card">
+              <div class="clue-meta">
+                <span class="clue-tier-title">Tier 3 &bull; Specific</span>
+                <span id="clue-status-3" class="clue-status">🔒 1 Tether</span>
+              </div>
+              <p id="clue-text-3" class="clue-body">Auto-decrypts on your final tether</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ACTIVE ROGUE-LITE PERKS PANEL -->
+        <div class="hud-panel perks-panel">
+          <div class="panel-header-row" style="margin-bottom:0;">
+            <span class="section-eyebrow" style="color:#c084fc;">Active Orbital Perks</span>
+            <span id="perk-progress-note" style="font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted);">Next draft in 3 solves</span>
+          </div>
+          <div id="active-perks-list" class="perks-badges-row">
+            <span class="perk-empty-note">No ship modules installed yet. Clear 3 words in Endless Run to draft a perk.</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT COLUMN: WORD TILES + CHARGE/LIFELINES + QWERTY KEYBOARD -->
+      <section class="column-stack">
+
+        <!-- WORD LETTER SLOTS -->
+        <div class="hud-panel word-board-panel">
+          <div id="word-tiles-container" class="word-tiles-row" aria-live="polite"></div>
+          <div class="word-meta-bar">
+            <span id="blanks-counter">0 BLANKS REMAINING</span>
+            <span>&bull;</span>
+            <span id="early-solve-status" class="early-bonus-on">SOLVE NOW EARLY BONUS READY (+1,000)</span>
+          </div>
+        </div>
+
+        <!-- CHARGE METER, 3 LIFELINES & SOLVE NOW GAMBLE -->
+        <div class="hud-panel tactical-panel">
+          <div>
+            <div class="charge-header">
+              <span class="charge-title">⚡ Lifeline Charge Meter</span>
+              <span id="charge-value-text" class="charge-num">40 / 120</span>
+            </div>
+            <div class="charge-track">
+              <div id="charge-bar-fill" class="charge-fill" style="width: 33%;"></div>
+            </div>
+            <div id="charge-rate-hint" class="charge-hint">+15 Charge per hit &bull; +30 Charge for rare 500-pt letters (K, J, X, Q, Z)</div>
+          </div>
+
+          <div class="lifelines-grid">
+            <button id="btn-sweep" type="button" class="lifeline-btn">
+              <span class="lifeline-name">🧹 Dead-Letter Sweep</span>
+              <span id="desc-sweep" class="lifeline-desc">Cut 3 wrong letters</span>
+              <span id="cost-sweep" class="lifeline-cost">40 ⚡</span>
+            </button>
+
+            <button id="btn-vowel" type="button" class="lifeline-btn">
+              <span class="lifeline-name">📡 Vowel Sonar</span>
+              <span id="desc-vowel" class="lifeline-desc">Reveal 1 vowel</span>
+              <span id="cost-vowel" class="lifeline-cost violet">60 ⚡</span>
+            </button>
+
+            <button id="btn-shield" type="button" class="lifeline-btn">
+              <span class="lifeline-name">🛡️ Tether Shield</span>
+              <span id="desc-shield" class="lifeline-desc">Block next miss / gamble</span>
+              <span id="cost-shield" class="lifeline-cost emerald">80 ⚡</span>
+            </button>
+          </div>
+
+          <button id="btn-open-solve" type="button" class="solve-now-btn">
+            <span>🎯 SOLVE NOW GAMBLE</span>
+            <span class="solve-sub">Risk 2 Tethers (Shieldable) &bull; +1,000 Bonus (&ge;4 Blanks)</span>
+          </button>
+        </div>
+
+        <!-- SCRABBLE-WEIGHTED QWERTY KEYBOARD -->
+        <div class="hud-panel keyboard-panel">
+          <div class="keyboard-header">
+            <span class="section-eyebrow" style="color:var(--text-muted);">Tactical Input Console (A–Z Keys Supported)</span>
+            <div class="legend-row">
+              <span class="legend-item" style="color:#cbd5e1;"><span class="legend-dot" style="background:#94a3b8;"></span>100 PT</span>
+              <span class="legend-item" style="color:#7dd3fc;"><span class="legend-dot" style="background:#38bdf8;"></span>250 PT</span>
+              <span class="legend-item" style="color:#fbbf24;"><span class="legend-dot" style="background:#f59e0b;"></span>500 PT RARE</span>
+            </div>
+          </div>
+          <div id="keyboard-container" class="keyboard-rows"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- MODAL 1: SOLVE NOW GAMBLE -->
+  <div id="modal-solve" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="solve-modal-title">
+    <div id="modal-solve-card" class="modal-card">
+      <div class="modal-header">
+        <h2 id="solve-modal-title" class="modal-title">🎯 Override &amp; Solve Now</h2>
+        <button id="btn-close-solve" type="button" class="modal-close" aria-label="Close">✕</button>
+      </div>
+      <p class="modal-copy">
+        Transmit the full target word. Solving with <strong style="color:#fbbf24;">4 or more blanks</strong> remaining awards a <strong style="color:#34d399;">+1,000 PTS</strong> Early Solve Bonus plus points for every hidden letter.
+        <br /><br />
+        <strong style="color:#fb7185;">Risk:</strong> A wrong word snaps <strong>2 Tethers</strong> (or <strong>0 Tethers</strong> if your Tether Shield is active, consuming the shield).
+      </p>
+      <form id="form-solve-now">
+        <input id="input-solve-word" class="solve-input" type="text" autocomplete="off" spellcheck="false" placeholder="TYPE FULL WORD..." />
+        <div class="modal-actions">
+          <button id="btn-cancel-solve" type="button" class="btn-ghost">Cancel</button>
+          <button type="submit" class="btn-amber">Transmit Solution</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 2: ROUND SUMMARY / MISSION OUTCOME -->
+  <div id="modal-summary" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="summary-title">
+    <div class="modal-card summary-center">
+      <div id="summary-icon" class="summary-icon">🚀</div>
+      <h2 id="summary-title" class="modal-title" style="font-size:1.45rem;">SIGNAL DECRYPTED!</h2>
+      <p id="summary-subtitle" style="margin:6px 0 0; font-size:0.82rem; color:var(--text-muted);">Astronaut secured to orbital airlock.</p>
+
+      <div class="revealed-word-box">
+        <div id="summary-category" class="revealed-cat">CATEGORY</div>
+        <div id="summary-word" class="revealed-word">SUPERNOVA</div>
+      </div>
+
+      <div class="breakdown-table">
+        <div class="breakdown-row">
+          <span>Letter Points (with Streak)</span>
+          <span id="sum-letter-pts" class="mono-bold">+0</span>
+        </div>
+        <div class="breakdown-row">
+          <span>Life Bonus (<span id="sum-lives-count">0</span> &times; 300)</span>
+          <span id="sum-life-pts" class="mono-bold val-emerald">+0</span>
+        </div>
+        <div class="breakdown-row">
+          <span>Early Solve Bonus</span>
+          <span id="sum-early-pts" class="mono-bold val-amber">+0</span>
+        </div>
+        <div id="sum-heal-row" class="breakdown-row divider">
+          <span>Endless Hull Repair</span>
+          <span id="sum-heal-text" class="mono-bold val-cyan">+2 Tethers Restored</span>
+        </div>
+        <div class="breakdown-row divider total">
+          <span>Total Run Score</span>
+          <span id="sum-total-score" class="mono-bold val-cyan">0</span>
+        </div>
+      </div>
+
+      <button id="btn-next-round" type="button" class="btn-primary full">NEXT TRANSMISSION &rarr;</button>
+    </div>
+  </div>
+
+  <!-- MODAL 3: ORBITAL MODULE DRAFT (EVERY 3 SOLVED WORDS IN ENDLESS RUN) -->
+  <div id="modal-perk" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="perk-modal-title">
+    <div class="modal-card wide summary-center">
+      <span class="pill-badge badge-rank" style="margin-bottom:8px;">Milestone Reached &bull; Orbital Module Draft</span>
+      <h2 id="perk-modal-title" class="modal-title" style="font-size:1.4rem;">Install a Ship Module</h2>
+      <p style="margin:6px 0 0; font-size:0.82rem; color:var(--text-muted);">Choose 1 permanent Rogue-lite upgrade for the remainder of this Endless Run.</p>
+      <div id="perk-choices-grid" class="perk-grid"></div>
+    </div>
+  </div>
+
+  <!-- TOAST BANNER -->
+  <div id="toast-banner" class="toast-banner" aria-live="polite">
+    <div id="toast-inner" class="toast-inner">Telemetry online.</div>
+  </div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      /* =======================================================================
+         1. 130 UNIQUE CURATED WORDS ACROSS 10 CATEGORIES (390 PROGRESSIVE CLUES)
+         ======================================================================= */
+      const WORD_BANK = [
+        // 1. Space & Cosmos (13)
+        { word: "NEBULA", category: "Space & Cosmos", clues: ["A colossal interstellar cloud in deep space", "Often acts as a stellar nursery where new stars form", "Famous examples include Orion and the Pillars of Creation"] },
+        { word: "QUASAR", category: "Space & Cosmos", clues: ["An extraordinarily luminous cosmic object", "Powered by a supermassive black hole accreting matter", "Short for quasi-stellar radio source"] },
+        { word: "ECLIPSE", category: "Space & Cosmos", clues: ["A dramatic celestial alignment", "Occurs when one astronomical body casts a shadow on another", "Can be solar or lunar, partial or total"] },
+        { word: "ASTEROID", category: "Space & Cosmos", clues: ["A rocky remnant from the early solar system", "Most orbit in a vast belt between Mars and Jupiter", "A giant one ended the age of non-avian dinosaurs"] },
+        { word: "PULSAR", category: "Space & Cosmos", clues: ["A rapidly spinning stellar remnant", "Emits rhythmic beams of radiation like a cosmic lighthouse", "A highly magnetized, rotating neutron star"] },
+        { word: "GRAVITY", category: "Space & Cosmos", clues: ["A fundamental force of the universe", "Keeps planets in orbit and anchors us to the ground", "Described by Newton and Einstein in general relativity"] },
+        { word: "SOLSTICE", category: "Space & Cosmos", clues: ["An astronomical seasonal milestone", "Occurs twice a year when planetary axial tilt reaches an extreme", "Marks the longest day in summer or shortest day in winter"] },
+        { word: "TELESCOPE", category: "Space & Cosmos", clues: ["An essential optical instrument for astronomy", "Uses lenses, mirrors, or dishes to capture distant light", "Hubble and James Webb are famous orbital examples"] },
+        { word: "APHELION", category: "Space & Cosmos", clues: ["A specific point along an elliptical orbit", "The exact opposite of perihelion in planetary motion", "The orbital point where a planet is farthest from the Sun"] },
+        { word: "EXOPLANET", category: "Space & Cosmos", clues: ["A distant world beyond our stellar neighborhood", "Thousands were discovered by the Kepler and TESS missions", "Any planet orbiting a star outside our solar system"] },
+        { word: "SUPERNOVA", category: "Space & Cosmos", clues: ["One of the most energetic events in the cosmos", "Can briefly outshine an entire galaxy and forge heavy elements", "The catastrophic explosive death of a massive star"] },
+        { word: "COSMONAUT", category: "Space & Cosmos", clues: ["A pioneer of orbital spaceflight", "Yuri Gagarin became the first one in 1961", "Russian term for a spacefarer or astronaut"] },
+        { word: "METEORITE", category: "Space & Cosmos", clues: ["An extraterrestrial visitor you can hold in your hand", "Begins as a space rock blazing through the atmosphere", "A meteoroid that survives entry to strike the surface"] },
+
+        // 2. Tech & Cyber (13)
+        { word: "ALGORITHM", category: "Tech & Cyber", clues: ["A foundational concept in computer science", "Powers search engines, recommendation feeds, and GPS routing", "A step-by-step set of rules for solving a computational problem"] },
+        { word: "FIREWALL", category: "Tech & Cyber", clues: ["A cornerstone of network cybersecurity", "Inspects incoming and outgoing data packets against strict rules", "A digital security barrier blocking unauthorized network traffic"] },
+        { word: "ENCRYPT", category: "Tech & Cyber", clues: ["An action vital to modern digital privacy", "Transforms readable plaintext into scrambled ciphertext", "To lock data with a cryptographic key so intruders cannot read it"] },
+        { word: "QUANTUM", category: "Tech & Cyber", clues: ["Cutting-edge frontier of physics and computing", "Relies on qubits, superposition, and entanglement", "Named after the smallest discrete packet of energy"] },
+        { word: "PROTOCOL", category: "Tech & Cyber", clues: ["A formal blueprint for digital communication", "HTTP, TCP, and Bluetooth are widely used examples", "Standardized rules governing how computers exchange data"] },
+        { word: "COMPILER", category: "Tech & Cyber", clues: ["A core software engineering tool", "Validates syntax and optimizes code prior to execution", "Translates human-written source code into machine language"] },
+        { word: "BANDWIDTH", category: "Tech & Cyber", clues: ["A crucial performance metric for internet links", "Higher capacity enables smoother 4K video and fast downloads", "The maximum data transfer rate of a network connection"] },
+        { word: "MAINFRAME", category: "Tech & Cyber", clues: ["Heavy-duty enterprise computing hardware", "Still processes billions of banking and airline transactions", "A massive central computer built for extreme reliability"] },
+        { word: "CYBERNETIC", category: "Tech & Cyber", clues: ["Relating to feedback loops and high-tech augmentation", "Frequently appears in sci-fi bionic limb concepts", "Describing systems that merge biological and electronic control"] },
+        { word: "BLOCKCHAIN", category: "Tech & Cyber", clues: ["A distributed database architecture", "Records transactions transparently without a central authority", "A cryptographically linked chain of immutable data blocks"] },
+        { word: "PIXELATED", category: "Tech & Cyber", clues: ["A recognizable visual artifact in digital imagery", "Appears when a low-resolution graphic is enlarged too much", "Displaying visible blocky square picture elements"] },
+        { word: "DEBUGGING", category: "Tech & Cyber", clues: ["A daily ritual for software engineers", "Involves stack traces, breakpoints, and inspecting logs", "The process of hunting down and fixing defects in code"] },
+        { word: "TELEMETRY", category: "Tech & Cyber", clues: ["Automated remote monitoring technology", "Used heavily in rocket launches and Formula 1 racing", "Collecting and transmitting live sensor data from afar"] },
+
+        // 3. Nature & Wildlife (13)
+        { word: "CHAMELEON", category: "Nature & Wildlife", clues: ["A specialized tree-dwelling reptile", "Has independently rotating eyes and a ballistic tongue", "Famous for shifting skin color to communicate or camouflage"] },
+        { word: "AVALANCHE", category: "Nature & Wildlife", clues: ["A sudden, dramatic alpine hazard", "Often triggered by unstable snowpack layers on steep slopes", "A massive rapid slide of snow and ice down a mountainside"] },
+        { word: "MANGROVE", category: "Nature & Wildlife", clues: ["A resilient tropical coastal ecosystem", "Shields shorelines from storm surges and coastal erosion", "Salt-tolerant trees with tangled stilt roots in tidal waters"] },
+        { word: "PENGUIN", category: "Nature & Wildlife", clues: ["A beloved Southern Hemisphere seabird", "Glides effortlessly underwater using flipper-like wings", "Flightless tuxedo-patterned bird thriving in Antarctica"] },
+        { word: "ALBATROSS", category: "Nature & Wildlife", clues: ["A legendary long-distance ocean wanderer", "Can soar for hours across waves without flapping once", "Seabird boasting the widest wingspan of any living bird"] },
+        { word: "MONSOON", category: "Nature & Wildlife", clues: ["A powerful regional weather cycle", "Critical to agriculture across South and Southeast Asia", "A seasonal reversing wind bringing torrential summer rains"] },
+        { word: "FJORD", category: "Nature & Wildlife", clues: ["A dramatic northern coastal landform", "Carved slowly over millennia by retreating Ice Age glaciers", "A deep, narrow sea inlet flanked by steep cliffs in Norway"] },
+        { word: "PLATYPUS", category: "Nature & Wildlife", clues: ["One of Australia's strangest native animals", "Hunts underwater prey using bill electroreception", "An egg-laying, duck-billed, beaver-tailed mammal"] },
+        { word: "SEQUOIA", category: "Nature & Wildlife", clues: ["A botanical giant of California mountain slopes", "Protected by thick, fire-resistant reddish bark", "Among the largest and oldest redwood trees on Earth"] },
+        { word: "STALACTITE", category: "Nature & Wildlife", clues: ["A mineral formation inside limestone caverns", "Grows slowly from dripping calcium-rich water over centuries", "An icicle-shaped rock hanging tightly from a cave ceiling"] },
+        { word: "ARCHIPELAGO", category: "Nature & Wildlife", clues: ["A geographic pattern found across world oceans", "Indonesia, Japan, and Hawaii are notable examples", "A chain or extensive cluster of islands grouped together"] },
+        { word: "CHLOROPHYLL", category: "Nature & Wildlife", clues: ["A vital biochemical compound inside plants", "Absorbs red and blue sunlight to fuel photosynthesis", "The natural pigment responsible for making foliage green"] },
+        { word: "WOLVERINE", category: "Nature & Wildlife", clues: ["A fierce, solitary northern carnivore", "Shares its name with an iconic comic book mutant", "The largest land-dwelling member of the weasel family"] },
+
+        // 4. Science & Chemistry (13)
+        { word: "CATALYST", category: "Science & Chemistry", clues: ["A key accelerator in chemical reactions", "Lowers the activation energy needed for a process", "A substance that speeds up a reaction without being consumed"] },
+        { word: "ISOTOPE", category: "Science & Chemistry", clues: ["A nuclear variant of a chemical element", "Carbon-14 is a famous radioactive example used in dating", "Atoms with equal protons but a different number of neutrons"] },
+        { word: "MOLECULE", category: "Science & Chemistry", clues: ["A microscopic building block of matter", "Water consists of two hydrogen and one oxygen joined together", "Two or more atoms chemically bonded as a single unit"] },
+        { word: "ELECTRON", category: "Science & Chemistry", clues: ["A fundamental subatomic particle", "Its movement through conductors creates electric current", "A negatively charged particle orbiting an atomic nucleus"] },
+        { word: "ENTROPY", category: "Science & Chemistry", clues: ["A central law in thermodynamics", "Always tends to increase over time in an isolated system", "A scientific measure of randomness or disorder"] },
+        { word: "OSMOSIS", category: "Science & Chemistry", clues: ["A crucial biological transport phenomenon", "Helps plant roots absorb moisture from surrounding soil", "Movement of water molecules across a semipermeable membrane"] },
+        { word: "SPECTRUM", category: "Science & Chemistry", clues: ["A continuous band of scientific wavelengths", "Revealed when white light splits through a glass prism", "The full range of electromagnetic waves or rainbow colors"] },
+        { word: "TITANIUM", category: "Science & Chemistry", clues: ["A prized aerospace and medical metal", "Named after the mighty Titans of Greek mythology", "Lightweight, corrosion-resistant element with atomic number 22"] },
+        { word: "VACCINE", category: "Science & Chemistry", clues: ["A triumph of modern immunology", "Trains white blood cells to recognize future pathogens", "A biological preparation providing acquired immunity to disease"] },
+        { word: "GRAVITON", category: "Science & Chemistry", clues: ["A hypothetical elementary particle", "Bridges quantum mechanics with spacetime curvature", "Theoretical massless boson that mediates gravitational force"] },
+        { word: "SYNAPSE", category: "Science & Chemistry", clues: ["A microscopic junction inside the nervous system", "Relays electrical impulses or chemical neurotransmitters", "The tiny gap where one brain neuron signals another"] },
+        { word: "PHOSPHORUS", category: "Science & Chemistry", clues: ["A highly reactive nonmetallic element", "Essential to DNA backbones and matchbox striker strips", "Chemical element whose Greek name means light-bringer"] },
+        { word: "CENTRIFUGE", category: "Science & Chemistry", clues: ["Standard laboratory separation equipment", "Giant versions also train astronauts for high G-forces", "A high-speed spinning machine that separates fluids by density"] },
+
+        // 5. Myth & History (13)
+        { word: "VALKYRIE", category: "Myth & History", clues: ["A legendary figure from Norse mythology", "Often depicted riding winged steeds across battlefields", "Chooser of the slain who escorts fallen heroes to Valhalla"] },
+        { word: "PHARAOH", category: "Myth & History", clues: ["An ancient Mediterranean title of authority", "Revered as a living intermediary between gods and mortals", "The supreme ruler of ancient Egypt, buried in grand tombs"] },
+        { word: "LABYRINTH", category: "Myth & History", clues: ["A legendary architectural puzzle from Crete", "Designed by the master craftsman Daedalus", "A bewildering maze of twisting corridors built for a monster"] },
+        { word: "OLYMPUS", category: "Myth & History", clues: ["A towering landmark in northern Greece", "Celebrated in epic poetry by Homer and Hesiod", "The sacred mountain home of Zeus and the twelve Greek gods"] },
+        { word: "SPARTAN", category: "Myth & History", clues: ["Associated with rigor, discipline, and austere living", "Fought beside King Leonidas at the Pass of Thermopylae", "An elite warrior citizen of ancient Laconia in Greece"] },
+        { word: "EXCALIBUR", category: "Myth & History", clues: ["A fabled relic of medieval British legend", "Linked to the Lady of the Lake and the court of Camelot", "The mythical sword wielded by King Arthur"] },
+        { word: "MINOTAUR", category: "Myth & History", clues: ["A feared creature of ancient Greek legend", "Ultimately defeated by the Athenian hero Theseus", "A monster with the body of a man and the head of a bull"] },
+        { word: "GLADIATOR", category: "Myth & History", clues: ["A famous figure of ancient Roman spectacle", "Trained in specialized schools for public amphitheaters", "An armed combatant who fought in the Colosseum"] },
+        { word: "SAMURAI", category: "Myth & History", clues: ["An iconic warrior class of feudal Asia", "Guided by the strict honor code known as Bushido", "Armor-clad Japanese swordsman wielding a curved katana"] },
+        { word: "HIEROGLYPH", category: "Myth & History", clues: ["An ancient form of visual language", "Deciphered in the 1820s using the Rosetta Stone", "Pictographic sacred writing carved on Egyptian monuments"] },
+        { word: "RENAISSANCE", category: "Myth & History", clues: ["A pivotal European cultural awakening", "Originated in 14th-century Florence, Italy", "Era of Da Vinci and Michelangelo whose name means rebirth"] },
+        { word: "CATAPULT", category: "Myth & History", clues: ["A classic medieval siege weapon", "Relied on stored torsion or counterweight tension", "A wooden war machine built to hurl boulders over castle walls"] },
+        { word: "PHOENIX", category: "Myth & History", clues: ["A timeless mythological symbol of renewal", "Featured across ancient Egyptian and Greek folklore", "An immortal firebird that rises reborn from its own ashes"] },
+
+        // 6. Cinema & Pop Culture (13)
+        { word: "BLOCKBUSTER", category: "Cinema & Pop Culture", clues: ["A major milestone in box-office entertainment", "Jaws and Star Wars pioneered the summer release format", "A massively budgeted, wildly popular hit movie"] },
+        { word: "SOUNDTRACK", category: "Cinema & Pop Culture", clues: ["An essential emotional layer of film and games", "Composers like John Williams and Hans Zimmer craft iconic ones", "The curated collection of music accompanying a movie"] },
+        { word: "PROTAGONIST", category: "Cinema & Pop Culture", clues: ["A structural pillar of storytelling", "Undergoes the central character arc and faces the antagonist", "The main character or hero driving a narrative forward"] },
+        { word: "CLIFFHANGER", category: "Cinema & Pop Culture", clues: ["A suspenseful narrative technique", "Frequently deployed right before a season finale ends", "An abrupt ending leaving characters in unresolved peril"] },
+        { word: "ANIMATION", category: "Cinema & Pop Culture", clues: ["A versatile visual filmmaking art form", "Spans hand-drawn cels, stop-motion clay, and 3D CGI", "Creating the illusion of motion from sequential frames"] },
+        { word: "DIRECTOR", category: "Cinema & Pop Culture", clues: ["A leading creative authority on a film set", "Guides actors, camera framing, and final editorial vision", "The filmmaker who calls Action and Cut"] },
+        { word: "SCREENPLAY", category: "Cinema & Pop Culture", clues: ["The written blueprint of a motion picture", "Formatted with sluglines, stage directions, and dialogue", "A complete movie script prepared for production"] },
+        { word: "DYSTOPIA", category: "Cinema & Pop Culture", clues: ["A staple setting of speculative fiction", "Explored in classics like 1984, Blade Runner, and The Matrix", "An imagined oppressive society marked by decay or control"] },
+        { word: "FRANCHISE", category: "Cinema & Pop Culture", clues: ["A powerhouse modern entertainment business model", "Expands across sequels, spin-offs, merchandise, and parks", "A multi-installment media series sharing one universe"] },
+        { word: "CAMEO", category: "Cinema & Pop Culture", clues: ["A fun surprise for observant moviegoers", "Stan Lee became famous for making these in superhero films", "A brief, often uncredited guest appearance by a famous face"] },
+        { word: "MONTAGE", category: "Cinema & Pop Culture", clues: ["A classic film editing sequence", "Often paired with upbeat music for a training scene", "Rapidly cut clips compressing weeks of progress into seconds"] },
+        { word: "SPOTLIGHT", category: "Cinema & Pop Culture", clues: ["A staple lighting fixture in theater and live shows", "Symbolizes sudden fame or intense public scrutiny", "A focused, intense beam of light illuminating one performer"] },
+        { word: "TRILOGY", category: "Cinema & Pop Culture", clues: ["A beloved format for epic sagas", "The Lord of the Rings and Back to the Future are iconic examples", "A connected series of exactly three films, books, or games"] },
+
+        // 7. Food & Culinary (13)
+        { word: "CROISSANT", category: "Food & Culinary", clues: ["A prized morning bakery staple", "Crafted by folding cold butter repeatedly into laminated dough", "A flaky, crescent-shaped French pastry"] },
+        { word: "ESPRESSO", category: "Food & Culinary", clues: ["A bold Italian cafe essential", "Forms the base for lattes, macchiatos, and cappuccinos", "Concentrated coffee brewed by forcing hot water under pressure"] },
+        { word: "AVOCADO", category: "Food & Culinary", clues: ["A nutrient-rich tropical fruit", "Prized for its creamy green flesh and single large pit", "Key ingredient mashed on toast or blended into Mexican dip"] },
+        { word: "JALAPENO", category: "Food & Culinary", clues: ["A popular ingredient in Tex-Mex cuisine", "Named after the Mexican city of Xalapa", "A medium-hot green chili pepper often stuffed or pickled"] },
+        { word: "TIRAMISU", category: "Food & Culinary", clues: ["A celebrated Italian restaurant dessert", "Its name translates roughly to pick me up", "Layered mascarpone and cocoa treat with coffee-soaked biscuits"] },
+        { word: "SAFFRON", category: "Food & Culinary", clues: ["The most expensive spice in the world by weight", "Harvested painstakingly by hand from purple crocus flowers", "Crimson threads giving paella and risotto a golden hue"] },
+        { word: "PISTACHIO", category: "Food & Culinary", clues: ["A distinctive Mediterranean snack and gelato flavor", "Its hard beige shell naturally splits open when ripe", "A vibrant pale-green culinary nut in the cashew family"] },
+        { word: "GAZPACHO", category: "Food & Culinary", clues: ["A refreshing dish originating in southern Spain", "Blends ripe tomatoes, cucumbers, peppers, garlic, and olive oil", "A classic Andalusian vegetable soup always served chilled"] },
+        { word: "CARDAMOM", category: "Food & Culinary", clues: ["A fragrant aromatic spice from South Asia", "Key to masala chai, Nordic buns, and rich curries", "Small green or black seed pods prized for citrusy warmth"] },
+        { word: "SOURDOUGH", category: "Food & Culinary", clues: ["An ancient artisan baking tradition", "Relies on a bubbling starter culture rather than store yeast", "Crusty, tangy bread leavened by wild fermentation"] },
+        { word: "GUACAMOLE", category: "Food & Culinary", clues: ["A crowd-favorite party appetizer", "Traditionally ground in a volcanic stone bowl with lime", "Creamy Mexican avocado dip studded with cilantro and onion"] },
+        { word: "PROSCIUTTO", category: "Food & Culinary", clues: ["A prized delicacy of northern Italy", "Parma and San Daniele are its most famous producing regions", "Paper-thin slices of dry-cured Italian ham often served with melon"] },
+        { word: "MERINGUE", category: "Food & Culinary", clues: ["An airy, delicate pastry component", "Used to crown lemon pies or form crisp pavlova shells", "Stiff peaks of whipped egg whites beaten with fine sugar"] },
+
+        // 8. Music & Arts (13)
+        { word: "SYMPHONY", category: "Music & Arts", clues: ["A grand cornerstone of Western classical music", "Typically structured across four contrasting movements", "An extended musical composition written for a full orchestra"] },
+        { word: "SAXOPHONE", category: "Music & Arts", clues: ["A charismatic wind instrument invented in the 1840s", "Despite its brass body, it is classified as a woodwind", "Signature curved-bell single-reed horn of jazz and blues"] },
+        { word: "CRESCENDO", category: "Music & Arts", clues: ["An expressive dynamic marking in sheet music", "Notated visually by a widening angle bracket symbol", "Italian musical term instructing players to grow louder"] },
+        { word: "MOSAIC", category: "Music & Arts", clues: ["A durable decorative art form dating to antiquity", "Adorns Byzantine domes, Roman floors, and Catalan parks", "An image assembled from thousands of tiny colored glass tiles"] },
+        { word: "WATERCOLOR", category: "Music & Arts", clues: ["A luminous fine-art painting medium", "Prized for translucent washes and soft edges on textured paper", "Paint made from pigments suspended in a water-soluble binder"] },
+        { word: "BARITONE", category: "Music & Arts", clues: ["A rich, resonant range in vocal and brass music", "Sits comfortably between a tenor and a bass", "The most common mid-low male singing voice classification"] },
+        { word: "HARMONICA", category: "Music & Arts", clues: ["A compact, pocket-sized musical instrument", "Staple of American folk, country, and Chicago blues", "A free-reed wind instrument played by blowing and drawing air"] },
+        { word: "ORIGAMI", category: "Music & Arts", clues: ["A meditative traditional craft from Japan", "Requires precision, symmetry, and zero glue or scissors", "The delicate art of folding flat paper into cranes and shapes"] },
+        { word: "SCULPTURE", category: "Music & Arts", clues: ["A tactile three-dimensional fine art", "Created by carving marble, casting bronze, or modeling clay", "Michelangelo's David and Rodin's Thinker are famous examples"] },
+        { word: "VIRTUOSO", category: "Music & Arts", clues: ["A title reserved for extraordinary artistic mastery", "Paganini and Franz Liszt epitomized this rare status", "A musician displaying dazzling, unmatched technical brilliance"] },
+        { word: "TEMPO", category: "Music & Arts", clues: ["A fundamental element of musical feel", "Measured accurately in beats per minute with a metronome", "The overall speed or pace at which a musical piece is played"] },
+        { word: "CALLIGRAPHY", category: "Music & Arts", clues: ["An expressive visual craft using ink and nibs", "Revered in East Asian brushwork and illuminated manuscripts", "The fine art of decorative, flowing hand lettering"] },
+        { word: "FRESCO", category: "Music & Arts", clues: ["A monumental Renaissance painting technique", "Used by Michelangelo across the Sistine Chapel ceiling", "Mural painted rapidly onto freshly laid wet lime plaster"] },
+
+        // 9. Adventure & Places (13)
+        { word: "COMPASS", category: "Adventure & Places", clues: ["An indispensable tool for explorers and mariners", "Revolutionized open-ocean navigation in the Age of Discovery", "A magnetized needle instrument that points toward north"] },
+        { word: "EXPEDITION", category: "Adventure & Places", clues: ["An ambitious organized journey into the unknown", "Shackleton's Antarctic voyage is a legendary example", "A long trek mounted for research or geographic discovery"] },
+        { word: "CITADEL", category: "Adventure & Places", clues: ["An imposing historic architectural stronghold", "Built overlooking a city as the ultimate refuge in wartime", "A heavily fortified fortress guarding the heart of an old town"] },
+        { word: "LIGHTHOUSE", category: "Adventure & Places", clues: ["A coastal landmark standing against crashing waves", "Uses rotating Fresnel lenses to sweep miles of dark water", "A tall shoreline beacon tower guiding ships safely past rocks"] },
+        { word: "SAVANNAH", category: "Adventure & Places", clues: ["An iconic sun-drenched biome", "Home to migrating wildebeest, giraffes, and acacia trees", "A vast tropical grassland dotted with widely spaced trees"] },
+        { word: "GLACIER", category: "Adventure & Places", clues: ["A colossal slow-moving force of nature", "Stores a huge share of Earth's freshwater in polar regions", "A dense river of compressed ancient ice creeping down valleys"] },
+        { word: "CANYON", category: "Adventure & Places", clues: ["A breathtaking geological landmark", "Sculpted over millions of years by persistent river erosion", "A deep, steep-walled gorge like Arizona's Grand landmark"] },
+        { word: "OASIS", category: "Adventure & Places", clues: ["A life-saving stop along ancient caravan routes", "Fed by underground aquifers rising near the surface", "A lush, palm-fringed patch of water and greenery in a desert"] },
+        { word: "MONOLITH", category: "Adventure & Places", clues: ["A striking vertical geological or carved formation", "Australia's Uluru and sci-fi's 2001 slab share this name", "A massive single upright block or pillar of solid stone"] },
+        { word: "CATACOMB", category: "Adventure & Places", clues: ["An eerie subterranean labyrinth", "Famous networks stretch beneath both Rome and Paris", "An underground tunnel system of chambers used as ancient tombs"] },
+        { word: "FRONTIER", category: "Adventure & Places", clues: ["The outermost edge of mapped territory", "Star Trek famously called space the final one", "The remote borderland between settled lands and wilderness"] },
+        { word: "OBSERVATORY", category: "Adventure & Places", clues: ["A quiet sanctuary perched atop dark mountain peaks", "Features a rotating dome that opens to the night sky", "A scientific facility built to house giant astronomical telescopes"] },
+        { word: "PENINSULA", category: "Adventure & Places", clues: ["A prominent coastal geographic formation", "Italy, Iberia, Florida, and Korea are prime examples", "A landmass projecting into water and bordered on three sides"] },
+
+        // 10. High-Value Rare Letters (13)
+        { word: "QUARTZ", category: "High-Value Rare Letters", clues: ["One of the most abundant minerals in Earth's crust", "Its precise piezoelectric vibration keeps wristwatches accurate", "A crystalline silicon dioxide gemstone including amethyst"] },
+        { word: "ZEPHYR", category: "High-Value Rare Letters", clues: ["A poetic word for a pleasant weather phenomenon", "Named after the Greek god of the west wind", "A soft, gentle, refreshing breeze"] },
+        { word: "SPHINX", category: "High-Value Rare Letters", clues: ["An enigmatic guardian of antiquity", "Posed a famous riddle to travelers outside Greek Thebes", "Mythical creature with a lion's body and human head near Giza"] },
+        { word: "OXYGEN", category: "High-Value Rare Letters", clues: ["A colorless gas indispensable to complex life", "Makes up roughly twenty-one percent of Earth's atmosphere", "Element number 8 that fuels respiration and combustion"] },
+        { word: "VORTEX", category: "High-Value Rare Letters", clues: ["A dynamic phenomenon in fluid mechanics", "Seen in bathtub drains, whirlpools, and raging tornadoes", "A mass of whirling fluid or air pulling inward around an axis"] },
+        { word: "JUXTAPOSE", category: "High-Value Rare Letters", clues: ["A sharp analytical and artistic verb", "Used by photographers and writers to highlight stark contrast", "To place two contrasting ideas or objects side by side"] },
+        { word: "ZODIAC", category: "High-Value Rare Letters", clues: ["An ancient celestial coordinate belt", "Divided into twelve distinct star signs along the ecliptic", "Astrological circle featuring Aries, Scorpio, and Aquarius"] },
+        { word: "KALEIDOSCOPE", category: "High-Value Rare Letters", clues: ["A mesmerizing optical toy invented in 1816", "Uses angled internal mirrors and tumbling colored glass beads", "A handheld tube producing ever-changing symmetrical patterns"] },
+        { word: "EQUINOX", category: "High-Value Rare Letters", clues: ["A biannual astronomical balancing point", "Happens every March and September as the Sun crosses the equator", "The day when daytime and nighttime are nearly equal worldwide"] },
+        { word: "BLIZZARD", category: "High-Value Rare Letters", clues: ["A dangerous extreme winter weather event", "Brings whiteout visibility and bone-chilling wind gusts", "A severe snowstorm with sustained winds above 35 mph"] },
+        { word: "PARADOX", category: "High-Value Rare Letters", clues: ["A mind-bending puzzle in logic and time travel", "The grandfather scenario is a famous sci-fi example", "A seemingly self-contradictory statement that may still hold truth"] },
+        { word: "JACKPOT", category: "High-Value Rare Letters", clues: ["A thrilling windfall in games of chance", "Originally a poker term before conquering slot machines", "The grand accumulated top prize won all at once"] },
+        { word: "QUIZZICAL", category: "High-Value Rare Letters", clues: ["A distinctive facial expression or inquisitive tone", "Often accompanied by a tilted head and a raised eyebrow", "Showing mild amusement, curiosity, or puzzled questioning"] }
+      ];
+
+      /* =======================================================================
+         2. CONSTANTS: SCRABBLE LETTER VALUES, KEYBOARD LAYOUT, RANKS & PERKS
+         ======================================================================= */
+      const LETTER_VALUES = {
+        E: 100, A: 100, I: 100, O: 100, N: 100, R: 100, T: 100, L: 100, S: 100, U: 100,
+        D: 250, G: 250, B: 250, C: 250, M: 250, P: 250, F: 250, H: 250, V: 250, W: 250, Y: 250,
+        K: 500, J: 500, X: 500, Q: 500, Z: 500
+      };
+
+      const VOWELS = new Set(["A", "E", "I", "O", "U"]);
+      const QWERTY_ROWS = [
+        ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"],
+        ["A", "S", "D", "F", "G", "H", "J", "K", "L"],
+        ["Z", "X", "C", "V", "B", "N", "M"]
+      ];
+
+      const MASTERY_RANKS = [
+        { min: 16000, label: "★ LEXICON GRANDMASTER" },
+        { min: 8000, label: "★ CRYPTOGRAPHER" },
+        { min: 3000, label: "★ WORDSMITH" },
+        { min: 0, label: "★ NOVICE" }
+      ];
+
+      const PERKS_POOL = [
+        {
+          id: "overclocked_capacitors",
+          icon: "⚡",
+          title: "Overclocked Capacitors",
+          shortLabel: "+10⚡/Hit",
+          desc: "Earn +10 extra Charge on every correct letter guess."
+        },
+        {
+          id: "free_vowel_sonar",
+          icon: "📡",
+          title: "Free Vowel Sonar",
+          shortLabel: "Sonar 0⚡",
+          desc: "Vowel Sonar costs 0 Charge instead of 60 Charge."
+        },
+        {
+          id: "reinforced_bulkhead",
+          icon: "🔩",
+          title: "Reinforced Bulkhead",
+          shortLabel: "Max 7 Tethers",
+          desc: "Increase Max Tethers to 7 and immediately restore +1 Tether."
+        },
+        {
+          id: "auto_decrypt",
+          icon: "🛰️",
+          title: "Auto-Decrypt",
+          shortLabel: "1 Free Letter",
+          desc: "Start every new word with 1 random letter automatically revealed."
+        },
+        {
+          id: "combo_stabilizer",
+          icon: "🔥",
+          title: "Combo Stabilizer",
+          shortLabel: "Halve Streak Loss",
+          desc: "Wrong guesses halve your streak bonus instead of resetting to 1.00x."
+        },
+        {
+          id: "lucky_sweep",
+          icon: "🧹",
+          title: "Lucky Sweep",
+          shortLabel: "Sweep 5 Keys",
+          desc: "Dead-Letter Sweep eliminates 5 unused wrong letters instead of 3."
+        }
+      ];
+
+      /* =======================================================================
+         3. SAFE WEB AUDIO API SYNTHESIZER (ZERO EXTERNAL URLS)
+         ======================================================================= */
+      class SoundFX {
+        constructor() {
+          this.ctx = null;
+          this.muted = false;
+        }
+        init() {
+          try {
+            if (!this.ctx) {
+              const AudioCtx = window.AudioContext || window.webkitAudioContext;
+              if (AudioCtx) this.ctx = new AudioCtx();
+            }
+            if (this.ctx && this.ctx.state === "suspended") {
+              this.ctx.resume();
+            }
+          } catch (e) {
+            // Audio unavailable
+          }
+        }
+        tone(freq, type, duration, vol, slideTo) {
+          if (this.muted) return;
+          this.init();
+          if (!this.ctx) return;
+          try {
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = type || "sine";
+            osc.frequency.setValueAtTime(freq, now);
+            if (slideTo) {
+              osc.frequency.exponentialRampToValueAtTime(Math.max(20, slideTo), now + duration);
+            }
+            gain.gain.setValueAtTime(vol || 0.1, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + duration);
+          } catch (e) {
+            // Ignore audio playback errors
+          }
+        }
+        click() { this.tone(660, "sine", 0.045, 0.05, 510); }
+        hit(mult) {
+          const f = 410 + Math.min(mult * 50, 440);
+          this.tone(f, "triangle", 0.13, 0.11, f * 1.24);
+        }
+        rareHit() {
+          this.tone(587, "sine", 0.12, 0.12);
+          setTimeout(() => this.tone(880, "triangle", 0.22, 0.13), 70);
+        }
+        tetherSnap() {
+          this.tone(215, "sawtooth", 0.25, 0.13, 52);
+          setTimeout(() => this.tone(130, "square", 0.12, 0.06, 44), 45);
+        }
+        shieldBlock() { this.tone(320, "sine", 0.2, 0.14, 790); }
+        lifeline() {
+          this.tone(523, "sine", 0.09, 0.09);
+          setTimeout(() => this.tone(659, "sine", 0.09, 0.09), 55);
+          setTimeout(() => this.tone(784, "sine", 0.16, 0.11), 110);
+        }
+        victory() {
+          [523, 659, 784, 1046].forEach((n, i) => {
+            setTimeout(() => this.tone(n, "triangle", 0.22, 0.12), i * 80);
+          });
+        }
+        defeat() {
+          [311, 277, 247, 175].forEach((n, i) => {
+            setTimeout(() => this.tone(n, "sawtooth", 0.24, 0.10), i * 130);
+          });
+        }
+      }
+
+      const sfx = new SoundFX();
+
+      /* =======================================================================
+         4. SAFE LOCALSTORAGE PERSISTENCE
+         ======================================================================= */
+      function loadStoredInt(key, fallback) {
+        try {
+          const val = parseInt(window.localStorage.getItem(key), 10);
+          return Number.isFinite(val) && val >= 0 ? val : fallback;
+        } catch (e) {
+          return fallback;
+        }
+      }
+
+      function saveStoredInt(key, val) {
+        try {
+          window.localStorage.setItem(key, String(val));
+        } catch (e) {
+          // Sandboxed iframe without storage access
+        }
+      }
+
+      /* =======================================================================
+         5. GAME STATE & DOM CACHE
+         ======================================================================= */
+      const state = {
+        mode: "endless", // "endless" | "single"
+        selectedCategory: "ALL",
+        maxLives: 6,
+        lives: 6,
+        charge: 40,
+        maxCharge: 120,
+        streakMultiplier: 1.0,
+        roundLetterScore: 0,
+        totalRunScore: 0,
+        cumulativeScore: loadStoredInt("hangman_plus_cum_score", 0),
+        highScore: loadStoredInt("hangman_plus_high_score", 0),
+        wordsCleared: 0,
+        sessionSolvedWords: new Set(),
+        shuffledQueues: {},
+        currentEntry: null,
+        guessedLetters: new Set(),
+        eliminatedLetters: new Set(),
+        shieldActive: false,
+        roundOver: false,
+        solvedViaEarlyGamble: false,
+        activePerks: new Set(),
+        tier2Unlocked: false,
+        tier3Unlocked: false
+      };
+
+      const el = {
+        backdropLayer: document.getElementById("cosmic-backdrop-layer"),
+        arena: document.getElementById("game-arena"),
+        rankBadge: document.getElementById("hud-rank-badge"),
+        modeBadge: document.getElementById("hud-mode-badge"),
+        statClearedBox: document.getElementById("stat-cleared-box"),
+        hudCleared: document.getElementById("hud-cleared"),
+        hudStreak: document.getElementById("hud-streak"),
+        hudRoundScore: document.getElementById("hud-round-score"),
+        hudTotalScore: document.getElementById("hud-total-score"),
+        hudHighScore: document.getElementById("hud-high-score"),
+        btnToggleMode: document.getElementById("btn-toggle-mode"),
+        btnMute: document.getElementById("btn-mute"),
+        muteIcon: document.getElementById("mute-icon"),
+        sectorSelect: document.getElementById("sector-select"),
+        deckCounter: document.getElementById("deck-counter"),
+
+        // Tether SVG
+        tetherPanel: document.getElementById("tether-panel"),
+        livesBadge: document.getElementById("lives-badge"),
+        shieldPill: document.getElementById("shield-pill"),
+        svgStarfieldLayer: document.getElementById("svg-starfield-layer"),
+        svgFlybyLayer: document.getElementById("svg-cosmic-flyby-layer"),
+        stationBeacon: document.getElementById("station-beacon"),
+        stationAnchorsLayer: document.getElementById("station-anchors-layer"),
+        tetherCablesLayer: document.getElementById("tether-cables-layer"),
+        sparksLayer: document.getElementById("sparks-layer"),
+        astronautWrapper: document.getElementById("astronaut-wrapper"),
+        astronautBody: document.getElementById("astronaut-body"),
+        svgVictoryAura: document.getElementById("svg-victory-aura"),
+        svgShieldBubble: document.getElementById("svg-shield-bubble"),
+        hazardStatusText: document.getElementById("hazard-status-text"),
+        hullAlertLabel: document.getElementById("hull-alert-label"),
+
+        // Clues & Perks
+        clueCategoryTag: document.getElementById("clue-category-tag"),
+        clueCard1: document.getElementById("clue-card-1"),
+        clueText1: document.getElementById("clue-text-1"),
+        clueCard2: document.getElementById("clue-card-2"),
+        clueStatus2: document.getElementById("clue-status-2"),
+        clueText2: document.getElementById("clue-text-2"),
+        clueCard3: document.getElementById("clue-card-3"),
+        clueStatus3: document.getElementById("clue-status-3"),
+        clueText3: document.getElementById("clue-text-3"),
+        perkProgressNote: document.getElementById("perk-progress-note"),
+        activePerksList: document.getElementById("active-perks-list"),
+
+        // Word Board & Tactical Controls
+        wordTilesContainer: document.getElementById("word-tiles-container"),
+        blanksCounter: document.getElementById("blanks-counter"),
+        earlySolveStatus: document.getElementById("early-solve-status"),
+        chargeValueText: document.getElementById("charge-value-text"),
+        chargeBarFill: document.getElementById("charge-bar-fill"),
+        chargeRateHint: document.getElementById("charge-rate-hint"),
+        btnSweep: document.getElementById("btn-sweep"),
+        btnVowel: document.getElementById("btn-vowel"),
+        btnShield: document.getElementById("btn-shield"),
+        descSweep: document.getElementById("desc-sweep"),
+        descVowel: document.getElementById("desc-vowel"),
+        descShield: document.getElementById("desc-shield"),
+        costSweep: document.getElementById("cost-sweep"),
+        costVowel: document.getElementById("cost-vowel"),
+        costShield: document.getElementById("cost-shield"),
+        btnOpenSolve: document.getElementById("btn-open-solve"),
+        keyboardContainer: document.getElementById("keyboard-container"),
+
+        // Modals
+        modalSolve: document.getElementById("modal-solve"),
+        modalSolveCard: document.getElementById("modal-solve-card"),
+        formSolveNow: document.getElementById("form-solve-now"),
+        inputSolveWord: document.getElementById("input-solve-word"),
+        btnCloseSolve: document.getElementById("btn-close-solve"),
+        btnCancelSolve: document.getElementById("btn-cancel-solve"),
+
+        modalSummary: document.getElementById("modal-summary"),
+        summaryIcon: document.getElementById("summary-icon"),
+        summaryTitle: document.getElementById("summary-title"),
+        summarySubtitle: document.getElementById("summary-subtitle"),
+        summaryCategory: document.getElementById("summary-category"),
+        summaryWord: document.getElementById("summary-word"),
+        sumLetterPts: document.getElementById("sum-letter-pts"),
+        sumLivesCount: document.getElementById("sum-lives-count"),
+        sumLifePts: document.getElementById("sum-life-pts"),
+        sumEarlyPts: document.getElementById("sum-early-pts"),
+        sumHealRow: document.getElementById("sum-heal-row"),
+        sumHealText: document.getElementById("sum-heal-text"),
+        sumTotalScore: document.getElementById("sum-total-score"),
+        btnNextRound: document.getElementById("btn-next-round"),
+
+        modalPerk: document.getElementById("modal-perk"),
+        perkChoicesGrid: document.getElementById("perk-choices-grid"),
+
+        toastBanner: document.getElementById("toast-banner"),
+        toastInner: document.getElementById("toast-inner")
+      };
+
+      /* =======================================================================
+         6. DUAL-LAYER COSMIC FLYBY ENGINE (STARS, ROCKETS, ALIEN UFOS)
+         ======================================================================= */
+      const CosmicFlybyEngine = (function () {
+        const SVG_NS = "http://www.w3.org/2000/svg";
+        const activeEntities = [];
+        let rafId = null;
+        let lastTs = 0;
+        let scheduleTimer = null;
+        let paused = false;
+
+        function rand(min, max) {
+          return min + Math.random() * (max - min);
+        }
+
+        function seedStarfields() {
+          // Layer 1: Full-viewport deep-space twinkling stars
+          const frag = document.createDocumentFragment();
+          for (let i = 0; i < 64; i++) {
+            const star = document.createElement("div");
+            star.className = "bg-star";
+            const size = rand(1.1, 2.7);
+            star.style.width = size + "px";
+            star.style.height = size + "px";
+            star.style.left = rand(1, 99).toFixed(2) + "%";
+            star.style.top = rand(1, 99).toFixed(2) + "%";
+            star.style.setProperty("--dur", rand(2.6, 6.2).toFixed(2) + "s");
+            star.style.setProperty("--delay", rand(0, 4.5).toFixed(2) + "s");
+            if (i % 5 === 0) star.style.background = "#7dd3fc";
+            if (i % 9 === 0) star.style.background = "#e9d5ff";
+            frag.appendChild(star);
+          }
+          el.backdropLayer.appendChild(frag);
+
+          // Layer 2: Twinkling starfield inside the Astronaut Tether SVG
+          for (let i = 0; i < 28; i++) {
+            const c = document.createElementNS(SVG_NS, "circle");
+            c.setAttribute("cx", rand(72, 452).toFixed(1));
+            c.setAttribute("cy", rand(8, 195).toFixed(1));
+            c.setAttribute("r", rand(0.7, 1.7).toFixed(2));
+            c.setAttribute("fill", i % 4 === 0 ? "#bae6fd" : "#f8fafc");
+            c.setAttribute("class", "svg-star");
+            c.style.animationDuration = rand(2.4, 5.5).toFixed(2) + "s";
+            c.style.animationDelay = rand(0, 3.5).toFixed(2) + "s";
+            el.svgStarfieldLayer.appendChild(c);
+          }
+        }
+
+        function createShootingStarNode(isSvg, palette) {
+          const strokeCol = palette.trail;
+          const headCol = palette.head;
+          if (!isSvg) {
+            const wrap = document.createElement("div");
+            wrap.className = "cosmic-entity-node";
+            wrap.innerHTML =
+              '<svg width="150" height="32" viewBox="0 0 150 32" overflow="visible">' +
+                '<defs><linearGradient id="' + palette.gid + '" x1="0%" y1="50%" x2="100%" y2="50%">' +
+                  '<stop offset="0%" stop-color="' + strokeCol + '" stop-opacity="0" />' +
+                  '<stop offset="70%" stop-color="' + strokeCol + '" stop-opacity="0.72" />' +
+                  '<stop offset="100%" stop-color="' + headCol + '" stop-opacity="1" />' +
+                '</linearGradient></defs>' +
+                '<polygon points="0,16 130,13.4 134,16 130,18.6" fill="url(#' + palette.gid + ')" />' +
+                '<polygon points="134,5 136.5,13.5 145,16 136.5,18.5 134,27 131.5,18.5 123,16 131.5,13.5" fill="' + headCol + '" />' +
+                '<circle cx="134" cy="16" r="3" fill="#ffffff" />' +
+              "</svg>";
+            return wrap;
+          }
+          const g = document.createElementNS(SVG_NS, "g");
+          g.innerHTML =
+            '<polygon points="-58,0 -2,-1.5 0,0 -2,1.5" fill="' + strokeCol + '" opacity="0.82" />' +
+            '<polygon points="0,-5 1.2,-1.2 5,0 1.2,1.2 0,5 -1.2,1.2 -5,0 -1.2,-1.2" fill="' + headCol + '" />';
+          return g;
+        }
+
+        function createRocketNode(isSvg) {
+          const markup =
+            '<g class="rocket-flame">' +
+              '<polygon points="-14,-4.5 -32,0 -14,4.5" fill="#f59e0b" opacity="0.92" />' +
+              '<polygon points="-14,-2.4 -24,0 -14,2.4" fill="#fef08a" />' +
+            "</g>" +
+            '<polygon points="-10,-6 -18,-13 -6,-8" fill="#f43f5e" />' +
+            '<polygon points="-10,6 -18,13 -6,8" fill="#f43f5e" />' +
+            '<path d="M -14 -7 Q 6 -10 24 0 Q 6 10 -14 7 Z" fill="#cbd5e1" stroke="#64748b" stroke-width="1.2" />' +
+            '<path d="M 12 -5.4 Q 19 -3.2 24 0 Q 19 3.2 12 5.4 Z" fill="#38bdf8" />' +
+            '<circle cx="2" cy="0" r="4" fill="#0f172a" stroke="#22d3ee" stroke-width="1.4" />' +
+            '<circle cx="3.2" cy="-1.2" r="1.2" fill="#e0f2fe" />';
+
+          if (!isSvg) {
+            const wrap = document.createElement("div");
+            wrap.className = "cosmic-entity-node";
+            wrap.innerHTML = '<svg width="78" height="36" viewBox="-36 -18 68 36" overflow="visible">' + markup + "</svg>";
+            return wrap;
+          }
+          const g = document.createElementNS(SVG_NS, "g");
+          g.innerHTML = markup;
+          return g;
+        }
+
+        function createUfoNode(isSvg, isViolet) {
+          const domeStroke = isViolet ? "#c084fc" : "#34d399";
+          const domeFill = isViolet ? "rgba(168, 85, 247, 0.36)" : "rgba(16, 185, 129, 0.34)";
+          const beamColor = isViolet ? "rgba(192, 132, 252, 0.22)" : "rgba(52, 211, 153, 0.22)";
+          const markup =
+            '<polygon class="ufo-beam" points="-10,6 10,6 22,38 -22,38" fill="' + beamColor + '" />' +
+            '<path d="M -13 -3 A 13 11 0 0 1 13 -3 Z" fill="' + domeFill + '" stroke="' + domeStroke + '" stroke-width="1.4" />' +
+            '<ellipse cx="0" cy="-7" rx="3.4" ry="4" fill="#064e3b" />' +
+            '<circle cx="-1.3" cy="-7.6" r="0.85" fill="#fef08a" />' +
+            '<circle cx="1.3" cy="-7.6" r="0.85" fill="#fef08a" />' +
+            '<ellipse cx="0" cy="1" rx="25" ry="7.2" fill="#334155" stroke="#94a3b8" stroke-width="1.4" />' +
+            '<ellipse cx="0" cy="4.4" rx="13" ry="3.2" fill="#1e293b" />' +
+            '<circle class="ufo-light" cx="-16" cy="1.2" r="2.2" fill="#22d3ee" />' +
+            '<circle class="ufo-light" cx="-6" cy="2.6" r="2.2" fill="#f59e0b" />' +
+            '<circle class="ufo-light" cx="6" cy="2.6" r="2.2" fill="#f43f5e" />' +
+            '<circle class="ufo-light" cx="16" cy="1.2" r="2.2" fill="#34d399" />';
+
+          if (!isSvg) {
+            const wrap = document.createElement("div");
+            wrap.className = "cosmic-entity-node";
+            wrap.innerHTML = '<svg width="80" height="64" viewBox="-32 -20 64 62" overflow="visible">' + markup + "</svg>";
+            return wrap;
+          }
+          const g = document.createElementNS(SVG_NS, "g");
+          g.innerHTML = markup;
+          return g;
+        }
+
+        function spawnExhaustParticle(x, y, vx, vy, isSvg) {
+          if (!isSvg) {
+            const p = document.createElement("div");
+            p.className = "exhaust-puff";
+            const sz = rand(3, 6.5);
+            p.style.width = sz + "px";
+            p.style.height = sz + "px";
+            p.style.background = Math.random() > 0.4 ? "rgba(56, 189, 248, 0.72)" : "rgba(251, 191, 36, 0.75)";
+            p.style.boxShadow = "0 0 8px rgba(56, 189, 248, 0.55)";
+            el.backdropLayer.appendChild(p);
+            activeEntities.push({
+              kind: "particle",
+              isSvg: false,
+              node: p,
+              x: x,
+              y: y,
+              vx: vx,
+              vy: vy,
+              age: 0,
+              duration: rand(0.45, 0.8)
+            });
+          } else {
+            const c = document.createElementNS(SVG_NS, "circle");
+            c.setAttribute("r", rand(1.1, 2.2).toFixed(1));
+            c.setAttribute("fill", Math.random() > 0.4 ? "#38bdf8" : "#fbbf24");
+            el.svgFlybyLayer.appendChild(c);
+            activeEntities.push({
+              kind: "particle",
+              isSvg: true,
+              node: c,
+              x: x,
+              y: y,
+              vx: vx,
+              vy: vy,
+              age: 0,
+              duration: rand(0.38, 0.65)
+            });
+          }
+        }
+
+        function launchEntity(type, layer) {
+          const isSvg = layer === "svg";
+          const boundsW = isSvg ? 460 : window.innerWidth;
+          const boundsH = isSvg ? 220 : window.innerHeight;
+          const leftToRight = Math.random() > 0.45;
+
+          if (type === "star") {
+            const palettes = [
+              { trail: "#22d3ee", head: "#cffafe", gid: "sg_" + Math.random().toString(36).slice(2, 8) },
+              { trail: "#fbbf24", head: "#fef9c3", gid: "sg_" + Math.random().toString(36).slice(2, 8) },
+              { trail: "#e2e8f0", head: "#ffffff", gid: "sg_" + Math.random().toString(36).slice(2, 8) }
+            ];
+            const palette = palettes[Math.floor(Math.random() * palettes.length)];
+            const count = Math.random() < 0.28 ? 2 : 1; // Occasional twin meteor shower
+
+            for (let i = 0; i < count; i++) {
+              const startX = leftToRight ? rand(-80, boundsW * 0.4) : rand(boundsW * 0.6, boundsW + 80);
+              const startY = rand(isSvg ? 10 : 20, boundsH * 0.36) + i * (isSvg ? 18 : 34);
+              const endX = leftToRight ? startX + rand(boundsW * 0.45, boundsW * 0.72) : startX - rand(boundsW * 0.45, boundsW * 0.72);
+              const endY = startY + rand(boundsH * 0.25, boundsH * 0.48);
+              const angleDeg = (Math.atan2(endY - startY, endX - startX) * 180) / Math.PI;
+              const node = createShootingStarNode(isSvg, {
+                trail: palette.trail,
+                head: palette.head,
+                gid: palette.gid + "_" + i
+              });
+
+              (isSvg ? el.svgFlybyLayer : el.backdropLayer).appendChild(node);
+              activeEntities.push({
+                kind: "star",
+                isSvg: isSvg,
+                node: node,
+                startX: startX,
+                startY: startY,
+                endX: endX,
+                endY: endY,
+                angleDeg: angleDeg,
+                scale: isSvg ? rand(0.62, 0.88) : rand(0.75, 1.15),
+                age: -i * 0.24,
+                duration: rand(1.15, 1.85)
+              });
+            }
+          } else if (type === "rocket") {
+            const startX = leftToRight ? -75 : boundsW + 75;
+            const endX = leftToRight ? boundsW + 85 : -85;
+            const startY = rand(boundsH * 0.2, boundsH * 0.76);
+            const endY = rand(boundsH * 0.14, boundsH * 0.72);
+            const angleDeg = (Math.atan2(endY - startY, endX - startX) * 180) / Math.PI;
+            const node = createRocketNode(isSvg);
+            (isSvg ? el.svgFlybyLayer : el.backdropLayer).appendChild(node);
+
+            activeEntities.push({
+              kind: "rocket",
+              isSvg: isSvg,
+              node: node,
+              flameEl: node.querySelector(".rocket-flame"),
+              startX: startX,
+              startY: startY,
+              endX: endX,
+              endY: endY,
+              angleDeg: angleDeg,
+              scale: isSvg ? 0.56 : rand(0.82, 1.08),
+              age: 0,
+              duration: isSvg ? rand(5.2, 7.2) : rand(7.5, 10.5),
+              exhaustTimer: 0
+            });
+          } else {
+            // Alien UFO with sinusoidal hover-bob and blinking rim lights
+            const startX = leftToRight ? -80 : boundsW + 80;
+            const endX = leftToRight ? boundsW + 90 : -90;
+            const baseY = rand(boundsH * 0.18, boundsH * 0.65);
+            const isViolet = Math.random() > 0.5;
+            const node = createUfoNode(isSvg, isViolet);
+            (isSvg ? el.svgFlybyLayer : el.backdropLayer).appendChild(node);
+
+            activeEntities.push({
+              kind: "ufo",
+              isSvg: isSvg,
+              node: node,
+              lights: Array.prototype.slice.call(node.querySelectorAll(".ufo-light")),
+              beamEl: node.querySelector(".ufo-beam"),
+              startX: startX,
+              endX: endX,
+              baseY: baseY,
+              bobAmp: isSvg ? rand(7, 13) : rand(16, 28),
+              bobFreq: rand(2.2, 3.4),
+              scale: isSvg ? 0.55 : rand(0.84, 1.12),
+              age: 0,
+              duration: isSvg ? rand(6.4, 8.6) : rand(8.8, 12.2)
+            });
+          }
+
+          ensureLoopRunning();
+        }
+
+        function tick(ts) {
+          if (paused) {
+            rafId = null;
+            return;
+          }
+          if (!lastTs) lastTs = ts;
+          const dt = Math.min(0.05, (ts - lastTs) / 1000);
+          lastTs = ts;
+
+          for (let i = activeEntities.length - 1; i >= 0; i--) {
+            const ent = activeEntities[i];
+            ent.age += dt;
+
+            if (ent.age < 0) {
+              ent.node.style.opacity = "0";
+              continue;
+            }
+
+            const progress = ent.age / ent.duration;
+            if (progress >= 1) {
+              if (ent.node && ent.node.parentNode) {
+                ent.node.parentNode.removeChild(ent.node);
+              }
+              activeEntities.splice(i, 1);
+              continue;
+            }
+
+            if (ent.kind === "particle") {
+              ent.x += ent.vx * dt;
+              ent.y += ent.vy * dt;
+              const alpha = Math.max(0, 1 - progress);
+              if (ent.isSvg) {
+                ent.node.setAttribute("cx", ent.x.toFixed(1));
+                ent.node.setAttribute("cy", ent.y.toFixed(1));
+                ent.node.setAttribute("opacity", (alpha * 0.75).toFixed(2));
+              } else {
+                ent.node.style.transform = "translate3d(" + ent.x.toFixed(1) + "px," + ent.y.toFixed(1) + "px,0) scale(" + (1 + progress * 0.7).toFixed(2) + ")";
+                ent.node.style.opacity = (alpha * 0.68).toFixed(2);
+              }
+            } else if (ent.kind === "star") {
+              const x = ent.startX + (ent.endX - ent.startX) * progress;
+              const y = ent.startY + (ent.endY - ent.startY) * progress;
+              const fade = progress < 0.15 ? progress / 0.15 : progress > 0.78 ? (1 - progress) / 0.22 : 1;
+              if (ent.isSvg) {
+                ent.node.setAttribute("transform", "translate(" + x.toFixed(1) + "," + y.toFixed(1) + ") rotate(" + ent.angleDeg.toFixed(1) + ") scale(" + ent.scale.toFixed(2) + ")");
+                ent.node.setAttribute("opacity", (fade * 0.85).toFixed(2));
+              } else {
+                ent.node.style.transform = "translate3d(" + x.toFixed(1) + "px," + y.toFixed(1) + "px,0) rotate(" + ent.angleDeg.toFixed(1) + "deg) scale(" + ent.scale.toFixed(2) + ")";
+                ent.node.style.opacity = (fade * 0.86).toFixed(2);
+              }
+            } else if (ent.kind === "rocket") {
+              const x = ent.startX + (ent.endX - ent.startX) * progress;
+              const y = ent.startY + (ent.endY - ent.startY) * progress;
+              const fade = progress < 0.08 ? progress / 0.08 : progress > 0.92 ? (1 - progress) / 0.08 : 1;
+
+              if (ent.flameEl) {
+                const flick = 0.82 + Math.sin(ent.age * 46) * 0.24;
+                ent.flameEl.setAttribute("transform", "scale(" + flick.toFixed(2) + ",1)");
+              }
+
+              if (ent.isSvg) {
+                ent.node.setAttribute("transform", "translate(" + x.toFixed(1) + "," + y.toFixed(1) + ") rotate(" + ent.angleDeg.toFixed(1) + ") scale(" + ent.scale.toFixed(2) + ")");
+                ent.node.setAttribute("opacity", (fade * 0.72).toFixed(2));
+              } else {
+                ent.node.style.transform = "translate3d(" + x.toFixed(1) + "px," + y.toFixed(1) + "px,0) rotate(" + ent.angleDeg.toFixed(1) + "deg) scale(" + ent.scale.toFixed(2) + ")";
+                ent.node.style.opacity = (fade * 0.76).toFixed(2);
+              }
+
+              // Emit fading exhaust particles behind the thruster
+              ent.exhaustTimer += dt;
+              if (ent.exhaustTimer >= (ent.isSvg ? 0.14 : 0.09)) {
+                ent.exhaustTimer = 0;
+                const rad = (ent.angleDeg * Math.PI) / 180;
+                const tailOffset = (ent.isSvg ? 14 : 26) * ent.scale;
+                const px = (ent.isSvg ? x : x + 36) - Math.cos(rad) * tailOffset;
+                const py = (ent.isSvg ? y : y + 18) - Math.sin(rad) * tailOffset;
+                spawnExhaustParticle(px, py, -Math.cos(rad) * 20 + rand(-8, 8), -Math.sin(rad) * 20 + rand(-8, 8), ent.isSvg);
+              }
+            } else if (ent.kind === "ufo") {
+              const x = ent.startX + (ent.endX - ent.startX) * progress;
+              const y = ent.baseY + Math.sin(ent.age * ent.bobFreq) * ent.bobAmp;
+              const tilt = Math.cos(ent.age * ent.bobFreq) * 5.5;
+              const fade = progress < 0.08 ? progress / 0.08 : progress > 0.92 ? (1 - progress) / 0.08 : 1;
+
+              // Staggered blinking rim lights + shimmering tractor beam
+              if (ent.lights) {
+                const activeIdx = Math.floor(ent.age * 7) % ent.lights.length;
+                ent.lights.forEach((l, idx) => {
+                  l.setAttribute("opacity", idx === activeIdx ? "1" : "0.28");
+                });
+              }
+              if (ent.beamEl) {
+                const beamOp = 0.35 + Math.sin(ent.age * 5.5) * 0.25;
+                ent.beamEl.setAttribute("opacity", beamOp.toFixed(2));
+              }
+
+              if (ent.isSvg) {
+                ent.node.setAttribute("transform", "translate(" + x.toFixed(1) + "," + y.toFixed(1) + ") rotate(" + tilt.toFixed(1) + ") scale(" + ent.scale.toFixed(2) + ")");
+                ent.node.setAttribute("opacity", (fade * 0.72).toFixed(2));
+              } else {
+                ent.node.style.transform = "translate3d(" + x.toFixed(1) + "px," + y.toFixed(1) + "px,0) rotate(" + tilt.toFixed(1) + "deg) scale(" + ent.scale.toFixed(2) + ")";
+                ent.node.style.opacity = (fade * 0.78).toFixed(2);
+              }
+            }
+          }
+
+          if (activeEntities.length > 0) {
+            rafId = window.requestAnimationFrame(tick);
+          } else {
+            rafId = null;
+            lastTs = 0;
+          }
+        }
+
+        function ensureLoopRunning() {
+          if (!rafId && !paused) {
+            lastTs = 0;
+            rafId = window.requestAnimationFrame(tick);
+          }
+        }
+
+        function scheduleNextFlyby(delayMs) {
+          clearTimeout(scheduleTimer);
+          scheduleTimer = setTimeout(function () {
+            if (!paused) {
+              const roll = Math.random();
+              const entityType = roll < 0.42 ? "star" : roll < 0.72 ? "rocket" : "ufo";
+              const layer = Math.random() < 0.34 ? "svg" : "backdrop";
+              launchEntity(entityType, layer);
+            }
+            scheduleNextFlyby(rand(6000, 13000));
+          }, delayMs);
+        }
+
+        function init() {
+          seedStarfields();
+          // Trigger first flyby 2.0 - 3.5 seconds after load
+          scheduleNextFlyby(rand(2000, 3500));
+
+          document.addEventListener("visibilitychange", function () {
+            if (document.hidden) {
+              paused = true;
+              clearTimeout(scheduleTimer);
+              if (rafId) {
+                window.cancelAnimationFrame(rafId);
+                rafId = null;
+              }
+            } else {
+              paused = false;
+              lastTs = 0;
+              if (activeEntities.length > 0) ensureLoopRunning();
+              scheduleNextFlyby(rand(3000, 6500));
+            }
+          });
+        }
+
+        return { init: init };
+      })();
+
+      /* =======================================================================
+         7. DECK MANAGEMENT (FISHER-YATES NON-REPEATING QUEUE)
+         ======================================================================= */
+      function shuffleArray(list) {
+        const copy = list.slice();
+        for (let i = copy.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          const tmp = copy[i];
+          copy[i] = copy[j];
+          copy[j] = tmp;
+        }
+        return copy;
+      }
+
+      function getCategoryPool(catKey) {
+        if (catKey === "ALL") return WORD_BANK;
+        return WORD_BANK.filter((item) => item.category === catKey);
+      }
+
+      function populateSectorDropdown() {
+        const categories = [];
+        WORD_BANK.forEach((item) => {
+          if (categories.indexOf(item.category) === -1) {
+            categories.push(item.category);
+          }
+        });
+
+        el.sectorSelect.innerHTML = "";
+        const optAll = document.createElement("option");
+        optAll.value = "ALL";
+        optAll.textContent = "All Categories (" + WORD_BANK.length + ")";
+        el.sectorSelect.appendChild(optAll);
+
+        categories.forEach((cat) => {
+          const count = WORD_BANK.filter((item) => item.category === cat).length;
+          const opt = document.createElement("option");
+          opt.value = cat;
+          opt.textContent = cat + " (" + count + ")";
+          el.sectorSelect.appendChild(opt);
+        });
+      }
+
+      function drawNextWord() {
+        const key = state.selectedCategory;
+        if (!state.shuffledQueues[key] || state.shuffledQueues[key].length === 0) {
+          const pool = getCategoryPool(key);
+          const unsolved = pool.filter((item) => !state.sessionSolvedWords.has(item.word));
+          state.shuffledQueues[key] = shuffleArray(unsolved.length > 0 ? unsolved : pool);
+        }
+
+        const picked = state.shuffledQueues[key].pop();
+        if (state.currentEntry && picked.word === state.currentEntry.word && state.shuffledQueues[key].length > 0) {
+          const alt = state.shuffledQueues[key].pop();
+          state.shuffledQueues[key].unshift(picked);
+          return alt;
+        }
+        return picked;
+      }
+
+      /* =======================================================================
+         8. HELPERS: UI FEEDBACK, RANKS, COUNTERS
+         ======================================================================= */
+      let toastTimer = null;
+      function showToast(message, borderColor) {
+        el.toastInner.textContent = message;
+        el.toastInner.style.borderColor = borderColor || "rgba(34, 211, 238, 0.6)";
+        el.toastBanner.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
+          el.toastBanner.classList.remove("show");
+        }, 2500);
+      }
+
+      function spawnFloatingPopup(text, x, y, colorHex) {
+        const node = document.createElement("div");
+        node.className = "score-popup";
+        node.style.left = Math.min(window.innerWidth - 70, Math.max(70, x)) + "px";
+        node.style.top = Math.max(36, y) + "px";
+        node.style.color = colorHex || "#34d399";
+        node.textContent = text;
+        document.body.appendChild(node);
+        setTimeout(() => {
+          if (node.parentNode) node.parentNode.removeChild(node);
+        }, 1120);
+      }
+
+      function triggerShake(target) {
+        const node = target || el.arena;
+        node.classList.remove("shake-impact");
+        void node.offsetWidth;
+        node.classList.add("shake-impact");
+      }
+
+      function getMasteryRank(score) {
+        for (let i = 0; i < MASTERY_RANKS.length; i++) {
+          if (score >= MASTERY_RANKS[i].min) return MASTERY_RANKS[i].label;
+        }
+        return "★ NOVICE";
+      }
+
+      function getBlankCount() {
+        if (!state.currentEntry) return 0;
+        let count = 0;
+        for (let i = 0; i < state.currentEntry.word.length; i++) {
+          if (!state.guessedLetters.has(state.currentEntry.word[i])) count++;
+        }
+        return count;
+      }
+
+      function getHiddenVowels() {
+        if (!state.currentEntry) return [];
+        const unique = Array.from(new Set(state.currentEntry.word.split("")));
+        return unique.filter((ch) => VOWELS.has(ch) && !state.guessedLetters.has(ch));
+      }
+
+      function getRemainingDeadLetters() {
+        if (!state.currentEntry) return [];
+        const targetSet = new Set(state.currentEntry.word.split(""));
+        return Object.keys(LETTER_VALUES).filter(
+          (ch) => !targetSet.has(ch) && !state.guessedLetters.has(ch) && !state.eliminatedLetters.has(ch)
+        );
+      }
+
+      function getVowelSonarCost() {
+        return state.activePerks.has("free_vowel_sonar") ? 0 : 60;
+      }
+
+      function getSweepAmount() {
+        return state.activePerks.has("lucky_sweep") ? 5 : 3;
+      }
+
+      function addScore(points) {
+        if (points <= 0) return;
+        state.totalRunScore += points;
+        state.cumulativeScore += points;
+        saveStoredInt("hangman_plus_cum_score", state.cumulativeScore);
+        if (state.totalRunScore > state.highScore) {
+          state.highScore = state.totalRunScore;
+          saveStoredInt("hangman_plus_high_score", state.highScore);
+        }
+      }
+
+      /* =======================================================================
+         9. RUN & ROUND LIFECYCLE
+         ======================================================================= */
+      function startNewRun() {
+        state.maxLives = 6;
+        state.lives = 6;
+        state.charge = 40;
+        state.streakMultiplier = 1.0;
+        state.totalRunScore = 0;
+        state.wordsCleared = 0;
+        state.activePerks.clear();
+        startRound();
+      }
+
+      function startRound() {
+        if (state.mode === "single") {
+          state.maxLives = 6;
+          state.lives = 6;
+          state.charge = 40;
+          state.streakMultiplier = 1.0;
+        } else if (state.lives <= 0) {
+          startNewRun();
+          return;
+        }
+
+        state.currentEntry = drawNextWord();
+        state.guessedLetters.clear();
+        state.eliminatedLetters.clear();
+        state.roundLetterScore = 0;
+        state.roundOver = false;
+        state.solvedViaEarlyGamble = false;
+        state.shieldActive = false;
+        state.tier2Unlocked = false;
+        state.tier3Unlocked = false;
+
+        // Reset SVG visual effects
+        el.astronautBody.classList.remove("astronaut-lost");
+        el.astronautBody.classList.add("astronaut-idle");
+        el.svgVictoryAura.classList.add("hidden");
+        el.tetherPanel.classList.remove("hull-victory-glow", "hull-alert-critical");
+        el.sparksLayer.innerHTML = "";
+
+        resetCluesUI();
+
+        // Apply Auto-Decrypt perk: reveal 1 random letter at round start
+        if (state.activePerks.has("auto_decrypt")) {
+          const letters = Array.from(new Set(state.currentEntry.word.split("")));
+          if (letters.length > 0) {
+            const freeLetter = letters[Math.floor(Math.random() * letters.length)];
+            state.guessedLetters.add(freeLetter);
+          }
+        }
+
+        evaluateClueUnlocks(true);
+        renderAll();
+      }
+
+      /* =======================================================================
+         10. TIERED CLUES ENGINE
+         ======================================================================= */
+      function resetCluesUI() {
+        el.clueCategoryTag.textContent = state.currentEntry.category.toUpperCase();
+        el.clueText1.textContent = state.currentEntry.clues[0];
+
+        el.clueCard2.className = "clue-card";
+        el.clueStatus2.textContent = "🔒 ≤3 Tethers";
+        el.clueText2.textContent = "Auto-decrypts at ≤3 remaining tethers";
+
+        el.clueCard3.className = "clue-card";
+        el.clueStatus3.textContent = "🔒 1 Tether";
+        el.clueText3.textContent = "Auto-decrypts on your final tether";
+      }
+
+      function evaluateClueUnlocks(silent) {
+        if (state.lives <= 3 && !state.tier2Unlocked) {
+          state.tier2Unlocked = true;
+          el.clueCard2.className = "clue-card unlocked-t2" + (silent ? "" : " just-unlocked");
+          el.clueStatus2.textContent = "DECRYPTED";
+          el.clueText2.textContent = state.currentEntry.clues[1];
+          if (!silent) showToast("📡 Tier 2 Clue Auto-Decrypted!", "rgba(245, 158, 11, 0.7)");
+        }
+
+        if (state.lives <= 1 && !state.tier3Unlocked) {
+          state.tier3Unlocked = true;
+          el.clueCard3.className = "clue-card unlocked-t3" + (silent ? "" : " just-unlocked");
+          el.clueStatus3.textContent = "CRITICAL";
+          el.clueText3.textContent = state.currentEntry.clues[2];
+          if (!silent) showToast("🚨 Tier 3 Critical Clue Unlocked!", "rgba(244, 63, 94, 0.75)");
+        }
+      }
+
+      /* =======================================================================
+         11. ASTRONAUT TETHER SVG RENDERER
+         ======================================================================= */
+      function renderTetherScene(snappedIndices) {
+        const lost = state.maxLives - state.lives;
+        const driftRatio = lost / Math.max(1, state.maxLives);
+
+        // Smooth rightward drift as tethers snap
+        const astroX = state.lives > 0 ? Math.round(156 + driftRatio * 195) : 362;
+        const astroY = state.lives > 0 ? Math.round(112 - driftRatio * 28) : 74;
+        el.astronautWrapper.setAttribute("transform", "translate(" + astroX + ", " + astroY + ")");
+
+        // Tether Shield Bubble
+        const showShield = state.shieldActive && state.lives > 0;
+        el.svgShieldBubble.classList.toggle("hidden", !showShield);
+        el.shieldPill.classList.toggle("active", showShield);
+
+        // Emergency Hull Alert on final tether
+        const isCritical = state.lives === 1 && !state.roundOver;
+        el.tetherPanel.classList.toggle("hull-alert-critical", isCritical);
+        el.hullAlertLabel.classList.toggle("visible", isCritical);
+
+        // Badge & status text
+        el.livesBadge.textContent = state.lives + " / " + state.maxLives + " CABLES";
+        if (state.lives >= 4) {
+          el.livesBadge.className = "tether-badge";
+          el.stationBeacon.setAttribute("fill", "#10b981");
+          el.hazardStatusText.textContent = "All energy tethers holding steady.";
+        } else if (state.lives >= 2) {
+          el.livesBadge.className = "tether-badge warn";
+          el.stationBeacon.setAttribute("fill", "#f59e0b");
+          el.hazardStatusText.textContent = "Caution: Astronaut drifting outward from airlock!";
+        } else if (state.lives === 1) {
+          el.livesBadge.className = "tether-badge crit";
+          el.stationBeacon.setAttribute("fill", "#f43f5e");
+          el.hazardStatusText.textContent = "CRITICAL: Final tether cable under extreme tension!";
+        } else {
+          el.livesBadge.className = "tether-badge crit";
+          el.stationBeacon.setAttribute("fill", "#ef4444");
+          el.hazardStatusText.textContent = "TETHER SEVERED! Astronaut adrift in deep space.";
+        }
+
+        // Compute anchor positions along airlock hull (supports 6 or 7 cables cleanly)
+        const anchorYs = [];
+        const topY = 56;
+        const bottomY = 164;
+        for (let i = 0; i < state.maxLives; i++) {
+          const y = state.maxLives === 1 ? 110 : topY + (i * (bottomY - topY)) / (state.maxLives - 1);
+          anchorYs.push(Math.round(y));
+        }
+
+        el.stationAnchorsLayer.innerHTML = anchorYs
+          .map((y, idx) => {
+            const intact = idx < state.lives;
+            return '<circle cx="68" cy="' + y + '" r="3.6" fill="' + (intact ? "#22d3ee" : "#475569") + '" />';
+          })
+          .join("");
+
+        let cablesSvg = "";
+        for (let i = 0; i < state.maxLives; i++) {
+          const startY = anchorYs[i];
+          const endX = astroX - 24;
+          const endY = astroY + (i - (state.maxLives - 1) / 2) * 5.2;
+          const intact = i < state.lives;
+
+          if (intact) {
+            const midX = (68 + endX) / 2;
+            const sag = 9 + (i % 2 === 0 ? 4 : -4);
+            const stroke = state.lives === 1 ? "#fb7185" : state.lives <= 3 ? "#38bdf8" : "#22d3ee";
+            cablesSvg +=
+              '<path d="M 68 ' + startY + " Q " + midX.toFixed(1) + " " + (((startY + endY) / 2) + sag).toFixed(1) + " " + endX.toFixed(1) + " " + endY.toFixed(1) +
+              '" fill="none" stroke="' + stroke + '" stroke-width="2.3" stroke-linecap="round" opacity="0.92" filter="url(#glowCyan)" />';
+          } else {
+            const stubX = 94 + (i % 3) * 9;
+            const stubY = startY + 12;
+            cablesSvg +=
+              '<path d="M 68 ' + startY + " Q 80 " + (startY + 8) + " " + stubX + " " + stubY +
+              '" fill="none" stroke="#475569" stroke-width="1.6" stroke-dasharray="3 2.5" opacity="0.68" />';
+          }
+        }
+        el.tetherCablesLayer.innerHTML = cablesSvg;
+
+        // Animated spark bursts for newly severed cables
+        if (snappedIndices && snappedIndices.length > 0) {
+          const sparks = snappedIndices
+            .filter((idx) => idx >= 0 && idx < anchorYs.length)
+            .map((idx) => {
+              const sx = 104 + (idx % 2) * 12;
+              const sy = anchorYs[idx] + 6;
+              return (
+                '<g class="spark-burst" filter="url(#glowSpark)">' +
+                  '<circle cx="' + sx + '" cy="' + sy + '" r="6.5" fill="#fef08a" />' +
+                  '<line x1="' + (sx - 16) + '" y1="' + (sy - 11) + '" x2="' + (sx + 16) + '" y2="' + (sy + 11) + '" stroke="#f59e0b" stroke-width="2.4" />' +
+                  '<line x1="' + (sx - 12) + '" y1="' + (sy + 13) + '" x2="' + (sx + 13) + '" y2="' + (sy - 12) + '" stroke="#fde047" stroke-width="2.2" />' +
+                  '<line x1="' + sx + '" y1="' + (sy - 17) + '" x2="' + sx + '" y2="' + (sy + 17) + '" stroke="#fb7185" stroke-width="2.2" />' +
+                "</g>"
+              );
+            })
+            .join("");
+          el.sparksLayer.innerHTML = sparks;
+          setTimeout(() => {
+            el.sparksLayer.innerHTML = "";
+          }, 580);
+        }
+      }
+
+      /* =======================================================================
+         12. CORE GUESSING, SCORING FORMULA & PENALTIES
+         ======================================================================= */
+      function handleLetterGuess(letter, sourceEl) {
+        if (state.roundOver) return;
+        letter = letter.toUpperCase();
+        if (state.guessedLetters.has(letter) || state.eliminatedLetters.has(letter)) return;
+
+        state.guessedLetters.add(letter);
+        const target = state.currentEntry.word;
+
+        let count = 0;
+        for (let i = 0; i < target.length; i++) {
+          if (target[i] === letter) count++;
+        }
+
+        const anchorRect = sourceEl
+          ? sourceEl.getBoundingClientRect()
+          : el.wordTilesContainer.getBoundingClientRect();
+        const popX = anchorRect.left + anchorRect.width / 2;
+        const popY = anchorRect.top;
+
+        if (count > 0) {
+          // Correct guess: Base value × revealed count × active streak multiplier
+          const baseVal = LETTER_VALUES[letter] || 100;
+          const ptsEarned = Math.round(baseVal * count * state.streakMultiplier);
+          state.roundLetterScore += ptsEarned;
+          addScore(ptsEarned);
+
+          // Charge economy (+15 standard, +30 rare 500-pt; +10 with Overclocked Capacitors)
+          let chargeGain = baseVal >= 500 ? 30 : 15;
+          if (state.activePerks.has("overclocked_capacitors")) chargeGain += 10;
+          state.charge = Math.min(state.maxCharge, state.charge + chargeGain);
+
+          // Increment Streak Multiplier by +0.25x
+          state.streakMultiplier = Number((state.streakMultiplier + 0.25).toFixed(2));
+
+          if (baseVal >= 500) {
+            sfx.rareHit();
+          } else {
+            sfx.hit(state.streakMultiplier);
+          }
+
+          spawnFloatingPopup("+" + ptsEarned.toLocaleString() + " pts!", popX, popY, baseVal >= 500 ? "#fbbf24" : "#34d399");
+          setTimeout(() => {
+            spawnFloatingPopup("+" + chargeGain + " CHARGE", popX + 18, popY - 22, "#22d3ee");
+          }, 120);
+
+          renderAll();
+          checkRoundOutcome();
+        } else {
+          // Wrong letter guess
+          applyWrongPenalty(1, popX, popY);
+        }
+      }
+
+      function applyWrongPenalty(tetherLoss, popX, popY) {
+        if (state.shieldActive) {
+          state.shieldActive = false;
+          sfx.shieldBlock();
+          spawnFloatingPopup("SHIELD BLOCKED!", popX, popY, "#22d3ee");
+          showToast("🛡️ Tether Shield absorbed the error! 0 Tethers lost & streak preserved.", "rgba(34, 211, 238, 0.75)");
+          renderAll();
+          return;
+        }
+
+        // Streak adjustment: reset to 1.00x, or halve streak bonus if Combo Stabilizer perk is active
+        if (state.activePerks.has("combo_stabilizer") && state.streakMultiplier > 1.0) {
+          const bonus = state.streakMultiplier - 1.0;
+          state.streakMultiplier = Number((1.0 + bonus / 2).toFixed(2));
+        } else {
+          state.streakMultiplier = 1.0;
+        }
+
+        const prevLives = state.lives;
+        state.lives = Math.max(0, state.lives - tetherLoss);
+        const snapped = [];
+        for (let i = state.lives; i < prevLives; i++) {
+          snapped.push(i);
+        }
+
+        sfx.tetherSnap();
+        triggerShake(el.arena);
+        spawnFloatingPopup("-" + tetherLoss + " TETHER" + (tetherLoss > 1 ? "S" : "") + "!", popX, popY, "#fb7185");
+
+        evaluateClueUnlocks(false);
+        renderAll(snapped);
+        checkRoundOutcome();
+      }
+
+      function checkRoundOutcome() {
+        const blanks = getBlankCount();
+
+        if (blanks === 0) {
+          // VICTORY
+          state.roundOver = true;
+          sfx.victory();
+          el.tetherPanel.classList.remove("hull-alert-critical");
+          el.tetherPanel.classList.add("hull-victory-glow");
+          el.svgVictoryAura.classList.remove("hidden");
+
+          const livesAtSolve = state.lives;
+          const lifeBonus = livesAtSolve * 300;
+          const earlyBonus = state.solvedViaEarlyGamble ? 1000 : 0;
+
+          addScore(lifeBonus + earlyBonus);
+          state.wordsCleared += 1;
+          state.sessionSolvedWords.add(state.currentEntry.word);
+
+          let healed = 0;
+          if (state.mode === "endless") {
+            const before = state.lives;
+            state.lives = Math.min(state.maxLives, state.lives + 2);
+            healed = state.lives - before;
+          }
+
+          renderAll();
+          openSummaryModal(true, livesAtSolve, lifeBonus, earlyBonus, healed);
+        } else if (state.lives <= 0) {
+          // DEFEAT
+          state.roundOver = true;
+          sfx.defeat();
+          el.astronautBody.classList.remove("astronaut-idle");
+          el.astronautBody.classList.add("astronaut-lost");
+
+          renderAll();
+          setTimeout(() => {
+            openSummaryModal(false, 0, 0, 0, 0);
+          }, 950);
+        }
+      }
+
+      /* =======================================================================
+         13. TACTICAL LIFELINES & SOLVE NOW GAMBLE
+         ======================================================================= */
+      function activateDeadLetterSweep() {
+        const cost = 40;
+        const dead = getRemainingDeadLetters();
+        if (state.roundOver || state.charge < cost || dead.length === 0) return;
+
+        state.charge -= cost;
+        sfx.lifeline();
+
+        const qty = getSweepAmount();
+        const cut = shuffleArray(dead).slice(0, qty);
+        cut.forEach((ch) => state.eliminatedLetters.add(ch));
+
+        showToast("🧹 Dead-Letter Sweep removed " + cut.length + " wrong keys: " + cut.join(", "), "rgba(34, 211, 238, 0.7)");
+        renderAll();
+      }
+
+      function activateVowelSonar() {
+        const cost = getVowelSonarCost();
+        const vowels = getHiddenVowels();
+        if (state.roundOver || state.charge < cost || vowels.length === 0) return;
+
+        state.charge -= cost;
+        sfx.lifeline();
+
+        const targetVowel = vowels[Math.floor(Math.random() * vowels.length)];
+        showToast("📡 Vowel Sonar locked onto \"" + targetVowel + "\"!", "rgba(168, 85, 247, 0.75)");
+        handleLetterGuess(targetVowel, el.btnVowel);
+      }
+
+      function activateTetherShield() {
+        const cost = 80;
+        if (state.roundOver || state.charge < cost || state.shieldActive) return;
+
+        state.charge -= cost;
+        state.shieldActive = true;
+        sfx.lifeline();
+
+        showToast("🛡️ Tether Shield online! Blocks next wrong letter or Solve Now miss.", "rgba(16, 185, 129, 0.75)");
+        renderAll();
+      }
+
+      function openSolveModal() {
+        if (state.roundOver) return;
+        sfx.click();
+        el.inputSolveWord.value = "";
+        el.modalSolve.classList.add("open");
+        setTimeout(() => el.inputSolveWord.focus(), 40);
+      }
+
+      function closeSolveModal() {
+        el.modalSolve.classList.remove("open");
+      }
+
+      function handleSolveNowSubmit(e) {
+        e.preventDefault();
+        if (state.roundOver) return;
+
+        const guess = el.inputSolveWord.value.trim().toUpperCase().replace(/[^A-Z]/g, "");
+        if (!guess) return;
+
+        const target = state.currentEntry.word;
+        const blanksLeft = getBlankCount();
+        const rect = el.btnOpenSolve.getBoundingClientRect();
+
+        if (guess === target) {
+          closeSolveModal();
+          if (blanksLeft >= 4) {
+            state.solvedViaEarlyGamble = true;
+          }
+
+          // Award remaining hidden letter points × active streak multiplier
+          let hiddenPts = 0;
+          for (let i = 0; i < target.length; i++) {
+            const ch = target[i];
+            if (!state.guessedLetters.has(ch)) {
+              hiddenPts += Math.round((LETTER_VALUES[ch] || 100) * state.streakMultiplier);
+            }
+          }
+          for (let i = 0; i < target.length; i++) {
+            state.guessedLetters.add(target[i]);
+          }
+
+          state.roundLetterScore += hiddenPts;
+          addScore(hiddenPts);
+          spawnFloatingPopup("OVERRIDE SUCCESS! +" + hiddenPts.toLocaleString(), rect.left + rect.width / 2, rect.top, "#fbbf24");
+          renderAll();
+          checkRoundOutcome();
+        } else {
+          triggerShake(el.modalSolveCard);
+          closeSolveModal();
+          applyWrongPenalty(2, rect.left + rect.width / 2, rect.top);
+        }
+      }
+
+      /* =======================================================================
+         14. ROUND SUMMARY & ORBITAL MODULE DRAFT MODALS
+         ======================================================================= */
+      function isEligibleForPerkDraft() {
+        return (
+          state.mode === "endless" &&
+          state.lives > 0 &&
+          state.wordsCleared > 0 &&
+          state.wordsCleared % 3 === 0 &&
+          state.activePerks.size < PERKS_POOL.length
+        );
+      }
+
+      function openSummaryModal(isWin, livesAtSolve, lifeBonus, earlyBonus, healedAmount) {
+        el.summaryCategory.textContent = state.currentEntry.category.toUpperCase();
+        el.summaryWord.textContent = state.currentEntry.word;
+        el.sumLetterPts.textContent = "+" + state.roundLetterScore.toLocaleString();
+        el.sumLivesCount.textContent = String(livesAtSolve);
+        el.sumLifePts.textContent = "+" + lifeBonus.toLocaleString();
+        el.sumEarlyPts.textContent = earlyBonus > 0 ? "+" + earlyBonus.toLocaleString() : "+0";
+        el.sumTotalScore.textContent = state.totalRunScore.toLocaleString();
+
+        if (isWin) {
+          el.summaryIcon.textContent = "🚀";
+          el.summaryIcon.className = "summary-icon";
+          el.summaryTitle.textContent = "SIGNAL DECRYPTED!";
+          el.summaryTitle.style.color = "#6ee7b7";
+          el.summarySubtitle.textContent = "Astronaut safely pulled back toward the orbital airlock.";
+
+          if (state.mode === "endless") {
+            el.sumHealRow.classList.remove("hidden");
+            el.sumHealText.textContent =
+              healedAmount > 0
+                ? "+" + healedAmount + " Tether" + (healedAmount > 1 ? "s" : "") + " Repaired"
+                : "Tethers at 100% Capacity";
+            el.btnNextRound.textContent = isEligibleForPerkDraft() ? "CLAIM ORBITAL MODULE →" : "NEXT TRANSMISSION →";
+          } else {
+            el.sumHealRow.classList.add("hidden");
+            el.btnNextRound.textContent = "PLAY ANOTHER WORD →";
+          }
+        } else {
+          el.summaryIcon.textContent = "🛰️";
+          el.summaryIcon.className = "summary-icon loss";
+          el.summaryTitle.textContent = "TETHER SEVERED";
+          el.summaryTitle.style.color = "#fda4af";
+          el.summarySubtitle.textContent =
+            "Mission ended after clearing " + state.wordsCleared + " word" + (state.wordsCleared === 1 ? "" : "s") + ".";
+          el.sumHealRow.classList.add("hidden");
+          el.btnNextRound.textContent = "LAUNCH NEW MISSION ↻";
+        }
+
+        el.modalSummary.classList.add("open");
+      }
+
+      function handleNextRoundAction() {
+        sfx.click();
+        el.modalSummary.classList.remove("open");
+
+        if (isEligibleForPerkDraft()) {
+          openPerkDraftModal();
+        } else {
+          startRound();
+        }
+      }
+
+      function openPerkDraftModal() {
+        const unowned = PERKS_POOL.filter((p) => !state.activePerks.has(p.id));
+        const options = shuffleArray(unowned).slice(0, 3);
+
+        el.perkChoicesGrid.innerHTML = "";
+        options.forEach((perk) => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "perk-card";
+          btn.innerHTML =
+            "<div>" +
+              '<div class="perk-card-icon">' + perk.icon + "</div>" +
+              '<div class="perk-card-title">' + perk.title + "</div>" +
+              '<p class="perk-card-desc">' + perk.desc + "</p>" +
+            "</div>" +
+            '<span class="perk-install-tag">Install Module &rarr;</span>';
+
+          btn.addEventListener("click", () => {
+            state.activePerks.add(perk.id);
+            if (perk.id === "reinforced_bulkhead") {
+              state.maxLives = 7;
+              state.lives = Math.min(state.maxLives, state.lives + 1);
+            }
+            sfx.lifeline();
+            el.modalPerk.classList.remove("open");
+            showToast(perk.icon + " Installed: " + perk.title, "rgba(168, 85, 247, 0.8)");
+            startRound();
+          });
+
+          el.perkChoicesGrid.appendChild(btn);
+        });
+
+        el.modalPerk.classList.add("open");
+      }
+
+      /* =======================================================================
+         15. RENDERERS: WORD TILES, KEYBOARD, HUD & LIFELINES
+         ======================================================================= */
+      function renderWordTiles() {
+        const word = state.currentEntry.word;
+        el.wordTilesContainer.innerHTML = "";
+
+        for (let i = 0; i < word.length; i++) {
+          const ch = word[i];
+          const guessed = state.guessedLetters.has(ch);
+          const tile = document.createElement("div");
+
+          if (guessed) {
+            tile.className = "letter-tile revealed";
+            tile.textContent = ch;
+          } else if (state.roundOver && state.lives <= 0) {
+            tile.className = "letter-tile missed-reveal";
+            tile.textContent = ch;
+          } else {
+            tile.className = "letter-tile";
+            tile.innerHTML = '<span class="tile-dot"></span>';
+          }
+          el.wordTilesContainer.appendChild(tile);
+        }
+
+        const blanks = getBlankCount();
+        el.blanksCounter.textContent = blanks + " BLANK" + (blanks === 1 ? "" : "S") + " REMAINING";
+        if (blanks >= 4) {
+          el.earlySolveStatus.textContent = "SOLVE NOW EARLY BONUS READY (+1,000)";
+          el.earlySolveStatus.className = "early-bonus-on";
+        } else {
+          el.earlySolveStatus.textContent = "EARLY SOLVE THRESHOLD PASSED (<4 BLANKS)";
+          el.earlySolveStatus.className = "";
+        }
+      }
+
+      function renderKeyboard() {
+        el.keyboardContainer.innerHTML = "";
+
+        QWERTY_ROWS.forEach((row) => {
+          const rowDiv = document.createElement("div");
+          rowDiv.className = "kb-row";
+
+          row.forEach((letter) => {
+            const pts = LETTER_VALUES[letter];
+            const isGuessed = state.guessedLetters.has(letter);
+            const isEliminated = state.eliminatedLetters.has(letter);
+            const inWord = state.currentEntry.word.indexOf(letter) !== -1;
+
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.disabled = isGuessed || isEliminated || state.roundOver;
+
+            let cls = "kb-key";
+            if (isGuessed && inWord) {
+              cls += " hit";
+            } else if (isGuessed && !inWord) {
+              cls += " miss";
+            } else if (isEliminated) {
+              cls += " eliminated";
+            } else if (pts === 500) {
+              cls += " tier-500";
+            } else if (pts === 250) {
+              cls += " tier-250";
+            }
+
+            btn.className = cls;
+            btn.innerHTML =
+              '<span class="kb-letter">' + letter + "</span>" +
+              '<span class="kb-pts">' + pts + "</span>";
+
+            btn.addEventListener("click", () => handleLetterGuess(letter, btn));
+            rowDiv.appendChild(btn);
+          });
+
+          el.keyboardContainer.appendChild(rowDiv);
+        });
+      }
+
+      function renderHUDAndLifelines() {
+        el.rankBadge.textContent = getMasteryRank(state.cumulativeScore);
+        el.hudCleared.textContent = String(state.wordsCleared);
+        el.hudStreak.textContent = state.streakMultiplier.toFixed(2) + "x";
+        el.hudRoundScore.textContent = state.roundLetterScore.toLocaleString();
+        el.hudTotalScore.textContent = state.totalRunScore.toLocaleString();
+        el.hudHighScore.textContent = state.highScore.toLocaleString();
+
+        if (state.mode === "endless") {
+          el.modeBadge.textContent = "ENDLESS RUN";
+          el.statClearedBox.classList.remove("hidden");
+          const remainingForDraft = 3 - (state.wordsCleared % 3);
+          el.perkProgressNote.textContent =
+            state.activePerks.size >= PERKS_POOL.length
+              ? "All 6 Modules Installed"
+              : "Next draft in " + remainingForDraft + " solve" + (remainingForDraft === 1 ? "" : "s");
+        } else {
+          el.modeBadge.textContent = "SINGLE ROUND";
+          el.statClearedBox.classList.add("hidden");
+          el.perkProgressNote.textContent = "Perks active in Endless Run";
+        }
+
+        // Deck Counter
+        const pool = getCategoryPool(state.selectedCategory);
+        const solvedCount = pool.filter((w) => state.sessionSolvedWords.has(w.word)).length;
+        el.deckCounter.textContent = "Deck: " + pool.length + " Words • Solved: " + solvedCount + "/" + pool.length;
+
+        // Active Perks
+        el.activePerksList.innerHTML = "";
+        if (state.activePerks.size === 0) {
+          const empty = document.createElement("span");
+          empty.className = "perk-empty-note";
+          empty.textContent =
+            state.mode === "endless"
+              ? "No ship modules installed yet. Clear 3 words in Endless Run to draft a perk."
+              : "Switch to Endless Run mode to draft passive Rogue-lite ship modules.";
+          el.activePerksList.appendChild(empty);
+        } else {
+          state.activePerks.forEach((perkId) => {
+            const perk = PERKS_POOL.find((p) => p.id === perkId);
+            if (perk) {
+              const chip = document.createElement("span");
+              chip.className = "perk-chip";
+              chip.title = perk.title + ": " + perk.desc;
+              chip.textContent = perk.icon + " " + perk.shortLabel;
+              el.activePerksList.appendChild(chip);
+            }
+          });
+        }
+
+        // Charge Meter
+        el.chargeValueText.textContent = state.charge + " / " + state.maxCharge;
+        el.chargeBarFill.style.width = Math.min(100, (state.charge / state.maxCharge) * 100).toFixed(1) + "%";
+        const baseCharge = state.activePerks.has("overclocked_capacitors") ? 25 : 15;
+        const rareCharge = state.activePerks.has("overclocked_capacitors") ? 40 : 30;
+        el.chargeRateHint.textContent =
+          "+" + baseCharge + " Charge per hit • +" + rareCharge + " Charge for rare 500-pt letters (K, J, X, Q, Z)";
+
+        // Lifelines
+        const sweepCost = 40;
+        const vowelCost = getVowelSonarCost();
+        const shieldCost = 80;
+        const deadLeft = getRemainingDeadLetters().length;
+        const vowelsLeft = getHiddenVowels().length;
+
+        el.costSweep.textContent = sweepCost + " ⚡";
+        el.descSweep.textContent = deadLeft === 0 ? "No dead letters left" : "Cut " + getSweepAmount() + " wrong letters";
+        el.btnSweep.disabled = state.roundOver || state.charge < sweepCost || deadLeft === 0;
+
+        el.costVowel.textContent = vowelCost === 0 ? "FREE (0 ⚡)" : vowelCost + " ⚡";
+        el.descVowel.textContent = vowelsLeft === 0 ? "No hidden vowels left" : "Reveal 1 hidden vowel";
+        el.btnVowel.disabled = state.roundOver || state.charge < vowelCost || vowelsLeft === 0;
+
+        el.costShield.textContent = shieldCost + " ⚡";
+        el.descShield.textContent = state.shieldActive ? "Shield already active" : "Block next miss / gamble";
+        el.btnShield.disabled = state.roundOver || state.charge < shieldCost || state.shieldActive;
+
+        el.btnOpenSolve.disabled = state.roundOver;
+      }
+
+      function renderAll(snappedIndices) {
+        renderTetherScene(snappedIndices || []);
+        renderWordTiles();
+        renderKeyboard();
+        renderHUDAndLifelines();
+      }
+
+      /* =======================================================================
+         16. EVENT LISTENERS & BOOTSTRAP
+         ======================================================================= */
+      el.btnToggleMode.addEventListener("click", () => {
+        sfx.click();
+        state.mode = state.mode === "endless" ? "single" : "endless";
+        showToast(
+          state.mode === "endless"
+            ? "Endless Run Active: Tethers & Charge persist + Orbital Perks every 3 solves!"
+            : "Single Round Mode Active: Fresh 6 Tethers & 40 Charge every word.",
+          "rgba(34, 211, 238, 0.75)"
+        );
+        startNewRun();
+      });
+
+      el.btnMute.addEventListener("click", () => {
+        sfx.muted = !sfx.muted;
+        el.muteIcon.textContent = sfx.muted ? "🔇" : "🔊";
+        if (!sfx.muted) sfx.click();
+      });
+
+      el.sectorSelect.addEventListener("change", (e) => {
+        sfx.click();
+        state.selectedCategory = e.target.value;
+        const name = state.selectedCategory === "ALL" ? "All 10 Sectors (130 Words)" : state.selectedCategory;
+        showToast("📡 Sector switched to: " + name, "rgba(34, 211, 238, 0.75)");
+        startRound();
+      });
+
+      el.btnSweep.addEventListener("click", activateDeadLetterSweep);
+      el.btnVowel.addEventListener("click", activateVowelSonar);
+      el.btnShield.addEventListener("click", activateTetherShield);
+
+      el.btnOpenSolve.addEventListener("click", openSolveModal);
+      el.btnCloseSolve.addEventListener("click", closeSolveModal);
+      el.btnCancelSolve.addEventListener("click", closeSolveModal);
+      el.formSolveNow.addEventListener("submit", handleSolveNowSubmit);
+
+      el.btnNextRound.addEventListener("click", handleNextRoundAction);
+
+      // Physical Keyboard Input Support
+      window.addEventListener("keydown", (e) => {
+        // Ignore while Solve Now modal is open (except Escape)
+        if (el.modalSolve.classList.contains("open")) {
+          if (e.key === "Escape") closeSolveModal();
+          return;
+        }
+        // Ignore if input or select has focus
+        if (document.activeElement && (document.activeElement.tagName === "INPUT" || document.activeElement.tagName === "SELECT")) {
+          return;
+        }
+        if (el.modalPerk.classList.contains("open")) {
+          return;
+        }
+        if (el.modalSummary.classList.contains("open")) {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            handleNextRoundAction();
+          }
+          return;
+        }
+        if (/^[a-zA-Z]$/.test(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey) {
+          handleLetterGuess(e.key.toUpperCase(), null);
+        }
+      });
+
+      // Initialize App
+      populateSectorDropdown();
+      CosmicFlybyEngine.init();
+      startNewRun();
+    })();
+  </script>
+</body>
+</html>
